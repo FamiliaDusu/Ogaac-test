@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Operador · Suipacha · sala 10</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- CSS base -->
+  <link rel="stylesheet" href="/ogaac.css" />
+  <link rel="stylesheet" href="/css/sala-stream.css" />
+  <!-- Layout Control Room (cine) -->
+  <link rel="stylesheet" href="/pages/operador/_shared/css/control-room.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <!-- SOLO estilos de Audiencia (no layout) -->
+  <style>
+    .aud-box{ margin-top:10px; display:grid; gap:8px; width:100%; }
+    .aud-row2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .aud-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .aud-box input,.aud-box select{
+      width:100%; box-sizing:border-box; padding:7px 9px;
+      border-radius:10px; border:1px solid rgba(0,0,0,.12);
+      background:#fff; font-size:13px;
+    }
+    @media (max-width:520px){ .aud-row2{ grid-template-columns:1fr; } }
+  </style>
+</head>
+
+<body class="page stream-page">
+
+<header class="ogaac-header header-control-room">
+  <div class="header-left">
+    <div class="ogaac-brand-title">OGAAC · Salas en vivo</div>
+  </div>
+
+  <div class="header-center">SUIPACHA · SALA10</div>
+
+  <div class="header-right">
+    <button class="btn-logout" type="button" onclick="ogaacLogout()">Cerrar sesión</button>
+  </div>
+</header>
+
+<main class="page-main">
+  <div class="content-inner">
+
+    <div class="page-subheader" style="display:flex;gap:10px;margin:6px 0 10px;">
+      <button class="btn-ghost btn" onclick="location.href='/index.html'">← Volver al Portal</button>
+      <button id="btnVolverSede" class="btn-ghost btn">← Volver a la sede</button>
+    </div>
+
+    <div class="control-grid">
+
+      <article class="card card-stream">
+        <div class="card-header">
+          <div class="card-title-inline">Visualización interna</div>
+          <div id="statusTag" class="status-tag">Verificando…</div>
+        </div>
+        <div class="video-wrapper">
+          <video id="video" controls autoplay muted playsinline></video>
+        </div>
+        <div id="status">Cargando stream…</div>
+      </article>
+
+      <article class="card card-audiencia">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Audiencia</div>
+            <div class="panel-note">Carga + Overlay + Cartel web</div>
+          </div>
+        </div>
+
+        <div class="aud-box" style="padding:12px 14px 14px;">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <b style="font-size:12px;">Audiencia</b>
+            <span id="aud-msg" style="font-size:12px;opacity:.7;"></span>
+          </div>
+
+          <div class="aud-row2">
+            <input id="aud-fecha" type="date">
+            <select id="aud-fuero"></select>
+          </div>
+
+          <div class="aud-row2">
+            <select id="aud-juzgado"></select>
+            <input id="aud-exp" placeholder="Expediente">
+          </div>
+
+          <div class="aud-row2">
+            <select id="aud-sala">
+              <option value="10">Sala 09</option>
+            </select>
+            <select id="aud-tipo"></select>
+          </div>
+
+          <input id="aud-caratula" placeholder="Carátula">
+          <input id="aud-imputados" placeholder="Cantidad imputados">
+
+          <div class="aud-actions">
+            <button class="btn" onclick="audSave()">Guardar</button>
+            <button class="btn" onclick="audApplyToOBS()">Aplicar a video</button>
+            <button class="btn" onclick="audToggleOverlay()">Overlay</button>
+            <button class="btn" onclick="audToggleBanner()">Cartel web</button>
+            <button class="btn btn-secondary" onclick="audClear()">Limpiar</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="card card-obsright">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Control OGAAC · Control OBS</div>
+            <div class="panel-note">Sala 09 (Suipacha)</div>
+          </div>
+          <span id="obsApiStatus" class="pill">OBS: ...</span>
+          <a class="panel-note" id="obsAdvancedLink" href="/web-socket-obs/index.html" target="_blank">Avanzado</a>
+          <a class="panel-note" href="/web-socket-obs/" target="_blank">Abrir</a>
+        </div>
+
+        <iframe class="panel-iframe"
+          src="/web-socket-obs/basic.html?sede=suipacha&sala=sala09"
+          loading="lazy"></iframe>
+      </article>
+
+    </div>
+  </div>
+</main>
+
+<footer class="ogaac-footer">OGAAC · Sala 09 Suipacha</footer>
+
+<!-- MODELO LIMPIO -->
+<script src="./config.js"></script>
+<script src="/pages/operador/_shared/panel.js"></script>
+
+</body>
+</html>

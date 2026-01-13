@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OGAAC · Operador</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 0; background:#f6f6f7; color:#111; }
+    header { padding: 14px 16px; background:#111; color:#fff; position: sticky; top:0; }
+    header .sub { opacity:.8; font-size: 12px; margin-top: 4px; }
+    .wrap { padding: 14px 16px; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+    .card { background:#fff; border:1px solid #e5e5e5; border-radius: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .top { display:flex; align-items:center; justify-content:space-between; gap: 8px; }
+    .title { font-weight: 700; }
+    .muted { color:#666; font-size: 12px; }
+    .badges { margin-top: 10px; display:flex; flex-wrap: wrap; gap: 6px; }
+    .badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid #ccc; background:#f2f2f2; }
+    .ok { background:#e7f7ed; border-color:#7ad39a; }
+    .warn { background:#fff6e5; border-color:#f0c36d; }
+    .err { background:#fde8e8; border-color:#f19a9a; }
+    .row { margin-top: 8px; font-size: 12px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .toolbar { display:flex; gap:8px; margin: 10px 0 14px; flex-wrap: wrap; }
+    button { cursor:pointer; border:1px solid #ddd; background:#fff; border-radius:10px; padding:8px 10px; }
+    input { border:1px solid #ddd; border-radius:10px; padding:8px 10px; min-width: 240px; }
+  </style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+    <div>
+      <div style="font-size:16px;font-weight:800;">OGAAC · Modo Operador</div>
+      <div class="sub" id="hdr-sub">Cargando…</div>
+    </div>
+    <div class="muted mono" id="hdr-health"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="toolbar">
+    <button id="btn-refresh">Refrescar lista</button>
+    <button id="btn-pause">Pausar polling</button>
+    <input id="filter" placeholder="Filtrar (ej: suipacha, sala10, libertad...)" />
+  </div>
+
+  <div id="grid" class="grid"></div>
+</div>
+
+<script>
+const POLL_MS = 5000;
+const NEED_AUTH_STATUS = new Set([401, 403]);
+let paused = false;
+let allSalas = [];
+let lastRenderedCount = 0;
+const timers = new Map();
+const pendingPolls = new Set();
+let sessionPromise = null;
+
+function makeKey(sede, sala) {
+  return `${sede}|${sala}`;
+}
+
+async function fetchJson(url, options = {}, { retryAuth = true } = {}) {
+  const finalOptions = { credentials: "include", ...options };
+  let response;
+  try {
+    response = await fetch(url, finalOptions);
+  } catch (networkError) {
+    throw { message: networkError?.message || "Error de red", status: 0 };
+  }
+
+  let text = "";
+  try {
+    text = await response.text();
+  } catch (_) {
+    text = "";
+  }
+
+  let data = {};
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch (_) {
+      data = {};
+    }
+  }
+
+  if (!response.ok || data.ok === false) {
+    const err = {
+      status: response.status,
+      statusText: response.statusText,
+      traceId: data.traceId,
+      code: data.code || data.error,
+      message: data.message || data.error || data.msg || `HTTP ${response.status}`,
+      data,
+    };
+    if (retryAuth && NEED_AUTH_STATUS.has(response.status)) {
+      await requireSession();
+      return fetchJson(url, options, { retryAuth: false });
+    }
+    throw err;
+  }
+
+  return data;
+}
+
+async function requireSession() {
+  if (sessionPromise) return sessionPromise;
+  sessionPromise = (async () => {
+    if (await hasValidSession()) return true;
+    await interactiveLogin();
+    return true;
+  })().finally(() => {
+    sessionPromise = null;
+  });
+  return sessionPromise;
+}
+
+async function hasValidSession() {
+  try {
+    await fetchJson("/api/check", { method: "GET" }, { retryAuth: false });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function interactiveLogin() {
+  const username = prompt("Usuario OGAAC:");
+  if (!username) throw new Error("Login cancelado");
+  const password = prompt(`Contraseña para ${username}:`);
+  if (!password) throw new Error("Login cancelado");
+
+  const payload = {
+    username,
+    password,
+    user: username,
+    pass: password,
+  };
+
+  try {
+    await fetchJson(
+      "/api/login",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
+      { retryAuth: false }
+    );
+  } catch (err) {
+    alert(err.message || "Login falló");
+    throw err;
+  }
+}
+
+function badge(text, cls = "") {
+  const el = document.createElement("span");
+  el.className = cls ? `badge ${cls}` : "badge";
+  el.textContent = text;
+  return el;
+}
+
+function mkCard(sede, sala, label) {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.dataset.sede = sede;
+  card.dataset.sala = sala;
+
+  const top = document.createElement("div");
+  top.className = "top";
+
+  const left = document.createElement("div");
+  const t = document.createElement("div");
+  t.className = "title";
+  t.textContent = (label ? `${label} · ` : "") + `${sede} / ${sala}`;
+  const sub = document.createElement("div");
+  sub.className = "muted mono";
+  sub.textContent = `/api/obs/${sede}/${sala}/summary`;
+  left.appendChild(t);
+  left.appendChild(sub);
+
+  const right = document.createElement("div");
+  right.className = "muted mono";
+  right.textContent = "…";
+
+  top.appendChild(left);
+  top.appendChild(right);
+
+  const badges = document.createElement("div");
+  badges.className = "badges";
+
+  const row1 = document.createElement("div");
+  row1.className = "row mono";
+  const row2 = document.createElement("div");
+  row2.className = "row mono";
+
+  card.appendChild(top);
+  card.appendChild(badges);
+  card.appendChild(row1);
+  card.appendChild(row2);
+
+  return { card, topRight: right, badges, row1, row2 };
+}
+
+function createPlaceholderCard(title, rows = []) {
+  const card = document.createElement("div");
+  card.className = "card";
+  const t = document.createElement("div");
+  t.className = "title";
+  t.textContent = title;
+  card.appendChild(t);
+  rows.forEach((text) => {
+    const row = document.createElement("div");
+    row.className = "row mono";
+    row.textContent = text;
+    card.appendChild(row);
+  });
+  return card;
+}
+
+function updateHeaderCounts(shown) {
+  lastRenderedCount = shown;
+  const hdr = document.getElementById("hdr-sub");
+  const pauseNote = paused ? " · PAUSADO" : "";
+  hdr.textContent = `Total: ${allSalas.length} · Mostradas: ${shown} · Poll: ${POLL_MS / 1000}s${pauseNote}`;
+}
+
+function showGridError(err) {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  const rows = [
+    err.status ? `status=${err.status}` : null,
+    err.code ? `code=${err.code}` : null,
+    err.traceId ? `traceId=${err.traceId}` : null,
+    err.message || "Error desconocido",
+  ].filter(Boolean);
+  grid.appendChild(createPlaceholderCard("No se pudo cargar la configuración", rows));
+  updateHeaderCounts(0);
+}
+
+function renderList(list) {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  timers.forEach((id) => clearInterval(id));
+  timers.clear();
+  pendingPolls.clear();
+
+  if (!list.length) {
+    const hasFilter = (document.getElementById("filter").value || "").trim().length > 0;
+    const msg = hasFilter ? "Sin salas que coincidan con el filtro" : "Sin salas configuradas";
+    grid.appendChild(createPlaceholderCard(msg));
+    updateHeaderCounts(0);
+    return;
+  }
+
+  list.forEach(({ sede, sala, label }) => {
+    const ui = mkCard(sede, sala, label);
+    grid.appendChild(ui.card);
+
+    const key = makeKey(sede, sala);
+    const tick = async () => {
+      if (paused || pendingPolls.has(key)) return;
+      pendingPolls.add(key);
+      try {
+        const data = await fetchJson(
+          `/api/obs/${encodeURIComponent(sede)}/${encodeURIComponent(sala)}/summary`
+        );
+        ui.topRight.textContent = data.traceId || "";
+        ui.badges.innerHTML = "";
+
+        const streamOn = !!data.stream?.outputActive;
+        const recOn = !!data.record?.outputActive;
+        const op = data.state?.state || "unknown";
+
+        ui.badges.appendChild(badge(`STREAM: ${streamOn ? "ON" : "OFF"}`, streamOn ? "ok" : ""));
+        ui.badges.appendChild(badge(`RECORD: ${recOn ? "ON" : "OFF"}`, recOn ? "warn" : ""));
+        ui.badges.appendChild(
+          badge(`OP: ${op}`, op === "error" ? "err" : op === "recording" ? "warn" : "ok")
+        );
+
+        const lastOut = data.state?.lastOutputPath;
+        const lastErr = data.state?.lastError;
+        ui.row1.textContent = lastOut ? `lastOutputPath=${lastOut}` : "";
+        ui.row2.textContent = lastErr ? `lastError=${lastErr}` : "";
+      } catch (err) {
+        const statusLabel = err.status ? `HTTP ${err.status}` : "ERROR";
+        ui.topRight.textContent = err.traceId ? `traceId=${err.traceId}` : statusLabel;
+        ui.badges.innerHTML = "";
+        ui.badges.appendChild(badge(statusLabel, "err"));
+        if (err.traceId) ui.badges.appendChild(badge(`traceId=${err.traceId}`, "err"));
+        if (err.code) ui.badges.appendChild(badge(`code=${err.code}`, "err"));
+        ui.row1.textContent = err.message ? `msg=${err.message}` : "";
+        ui.row2.textContent = err.statusText ? err.statusText : "";
+      } finally {
+        pendingPolls.delete(key);
+      }
+    };
+
+    tick();
+    timers.set(key, setInterval(tick, POLL_MS));
+  });
+
+  updateHeaderCounts(list.length);
+}
+
+async function loadConfig() {
+  const hdr = document.getElementById("hdr-sub");
+  hdr.textContent = "Actualizando lista…";
+  try {
+    const data = await fetchJson("/api/obs/config");
+    allSalas = Array.isArray(data.salas) ? data.salas : [];
+    applyFilter();
+  } catch (err) {
+    console.error("[operador] No pude cargar /api/obs/config", err);
+    showGridError(err);
+    throw err;
+  }
+}
+
+function applyFilter() {
+  const q = (document.getElementById("filter").value || "").toLowerCase().trim();
+  const filtered = !q
+    ? allSalas
+    : allSalas.filter((x) =>
+        (x.sede || "").toLowerCase().includes(q) ||
+        (x.sala || "").toLowerCase().includes(q) ||
+        ((x.label || "") + "").toLowerCase().includes(q)
+      );
+  renderList(filtered);
+}
+
+async function loadHealth() {
+  try {
+    const h = await fetchJson("/health", {}, { retryAuth: false });
+    document.getElementById("hdr-health").textContent =
+      `rev=${h.gitRev || "-"} · up=${h.uptimeSec || 0}s · obsPool=${h.obsPoolSize} · recOps=${h.recordOpsSize}`;
+  } catch {
+    document.getElementById("hdr-health").textContent = "";
+  }
+}
+
+document.getElementById("btn-refresh").addEventListener("click", () => {
+  loadConfig().catch(() => {});
+});
+
+document.getElementById("btn-pause").addEventListener("click", (e) => {
+  paused = !paused;
+  e.target.textContent = paused ? "Reanudar polling" : "Pausar polling";
+  updateHeaderCounts(lastRenderedCount);
+});
+
+document.getElementById("filter").addEventListener("input", applyFilter);
+
+(async function init() {
+  await requireSession().catch((err) => {
+    console.warn("[operador] Sesión no iniciada aún", err);
+  });
+  await loadHealth();
+  await loadConfig().catch(() => {});
+  setInterval(loadHealth, 5000);
+})();
+</script>
+</body>
+</html>

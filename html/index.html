@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Portal Salas OGAAC - Suipacha</title>
+
+  <!-- CSS global institucional -->
+  <link rel="stylesheet" href="ogaac.css" />
+  <style>
+    .status-summary { font-size:13px; color:#4b5563; }
+    .card-diag { margin-top:10px; font-size:12px; color:#4b5563; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; word-break: break-all; }
+    .card-diag span { display:block; }
+  </style>
+</head>
+<body class="page">
+  <!-- HEADER -->
+  <header class="ogaac-header">
+    <div class="ogaac-brand">
+      <div class="ogaac-brand-title">OGAAC · Portal de Salas</div>
+      <div class="ogaac-brand-subtitle">
+        Monitoreo interno de streaming y audiencias judiciales
+      </div>
+    </div>
+
+<div style="display:flex; align-items:center; gap:10px;">
+  <div class="nav-pill">Acceso restringido · Usuario autorizado</div>
+
+  <button class="btn" type="button"
+    onclick="window.location.href='/operador/sedes.html'">
+    🎛️ Modo operador
+  </button>
+
+  <button class="btn-logout" type="button" onclick="ogaacLogout()">
+    Cerrar sesión
+  </button>
+</div>
+  </header>
+
+  <!-- LAYOUT PRINCIPAL -->
+  <main class="page-main salas-layout">
+    <!-- SIDEBAR IZQUIERDA -->
+    <aside class="sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-section-title">Sedes</div>
+        <button class="sidebar-btn active" type="button">
+          Suipacha
+          <small>Salas 10, 9, 8, 4 y 3</small>
+        </button>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-section-title">Audiencias grabadas</div>
+        <button class="sidebar-link" type="button" onclick="window.location.href='audiencias.html'">
+          Audiencias (31 juzgados)
+        </button>
+      </div>
+
+      <div class="sidebar-footer">
+        Uso interno OGAAC · No compartir credenciales de acceso.
+      </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <section class="main-content">
+      <div class="content-inner">
+        <div class="section-title section-title--split">
+          <h2>Sede Suipacha · Salas en vivo</h2>
+          <small id="salas-summary" class="status-summary">Estado de señal en tiempo real (HLS)</small>
+        </div>
+
+        <div class="salas-grid">
+          <!-- Sala 10 -->
+          <article class="card" data-sala="sala10">
+            <div class="card-header">
+              <div class="card-title-inline">Sala 10 Suipacha</div>
+              <div class="status">
+                <span id="dot-sala10" class="status-dot offline"></span>
+                <span id="text-sala10">Sin señal</span>
+              </div>
+            </div>
+            <div class="card-body">
+              Sala principal de Suipacha. Uso habitual para audiencias de mayor prioridad y alto flujo de participantes.
+            </div>
+            <div class="card-footer">
+              <button class="btn" onclick="openSala('sala10.html')">Ver streaming</button>
+            </div>
+            <div class="card-diag" id="diag-sala10">HLS: /hls/suipacha/sala10/stream.m3u8 · pendiente</div>
+          </article>
+
+          <!-- Sala 9 -->
+          <article class="card" data-sala="sala9">
+            <div class="card-header">
+              <div class="card-title-inline">Sala 9 Suipacha</div>
+              <div class="status">
+                <span id="dot-sala9" class="status-dot offline"></span>
+                <span id="text-sala9">Sin señal</span>
+              </div>
+            </div>
+            <div class="card-body">
+              Sala 9 de Suipacha. Configurada para transmisión independiente vía RTMP/HLS para audiencias simultáneas.
+            </div>
+            <div class="card-footer">
+              <button class="btn" onclick="openSala('sala9.html')">Ver streaming</button>
+            </div>
+            <div class="card-diag" id="diag-sala9">HLS: /hls/suipacha/sala9/stream.m3u8 · pendiente</div>
+          </article>
+
+          <!-- Sala 8 -->
+          <article class="card" data-sala="sala8">
+            <div class="card-header">
+              <div class="card-title-inline">Sala 8 Suipacha</div>
+              <div class="status">
+                <span id="dot-sala8" class="status-dot offline"></span>
+                <span id="text-sala8">Sin señal</span>
+              </div>
+            </div>
+            <div class="card-body">
+              Sala de apoyo para audiencias adicionales. Permite desdoblar cronogramas y reducir tiempos de espera.
+            </div>
+            <div class="card-footer">
+              <button class="btn" onclick="openSala('sala8.html')">Ver streaming</button>
+            </div>
+            <div class="card-diag" id="diag-sala8">HLS: /hls/suipacha/sala8/stream.m3u8 · pendiente</div>
+          </article>
+
+          <!-- Sala 4 -->
+          <article class="card" data-sala="sala4">
+            <div class="card-header">
+              <div class="card-title-inline">Sala 4 Suipacha</div>
+              <div class="status">
+                <span id="dot-sala4" class="status-dot offline"></span>
+                <span id="text-sala4">Sin señal</span>
+              </div>
+            </div>
+            <div class="card-body">
+              Sala preparada para audiencias especiales o contingencias técnicas, con esquema de streaming dedicado.
+            </div>
+            <div class="card-footer">
+              <button class="btn" onclick="openSala('sala4.html')">Ver streaming</button>
+            </div>
+            <div class="card-diag" id="diag-sala4">HLS: /hls/suipacha/sala4/stream.m3u8 · pendiente</div>
+          </article>
+
+          <!-- Sala 3 -->
+          <article class="card" data-sala="sala3">
+            <div class="card-header">
+              <div class="card-title-inline">Sala 3 Suipacha</div>
+              <div class="status">
+                <span id="dot-sala3" class="status-dot offline"></span>
+                <span id="text-sala3">Sin señal</span>
+              </div>
+            </div>
+            <div class="card-body">
+              Sala adicional para carga distribuida de audiencias, pruebas de configuración y refuerzo operativo.
+            </div>
+            <div class="card-footer">
+              <button class="btn" onclick="openSala('sala3.html')">Ver streaming</button>
+            </div>
+            <div class="card-diag" id="diag-sala3">HLS: /hls/suipacha/sala3/stream.m3u8 · pendiente</div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="ogaac-footer">
+    OGAAC · Uso interno · Sede Suipacha · Plataforma técnica Nginx + RTMP + HLS
+  </footer>
+
+  <script src="/_shared/hls-player.js"></script>
+  <script>
+    // --- Logout ---
+    function ogaacLogout() {
+      try {
+        localStorage.removeItem("ogaac_token");
+        sessionStorage.clear();
+      } catch (e) {
+        console.error("Error al limpiar storage en logout:", e);
+      }
+      window.location.replace("login.html");
+    }
+
+    // --- Protección del portal: validar token al cargar usando /api/check ---
+    async function validarTokenYIniciar() {
+      const token = localStorage.getItem("ogaac_token");
+
+      // Si no hay token → al login
+      if (!token) {
+        console.warn("Sin token en localStorage, redirigiendo a login");
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/check", {
+          method: "GET",
+          headers: {
+            "Authorization": "Bearer " + token
+          }
+        });
+
+        let data = {};
+        try {
+          data = await res.json();
+        } catch (_) {
+          data = {};
+        }
+
+        console.log("Resultado /api/check:", res.status, data);
+
+        // Token inválido o faltante
+        if (res.status === 401 || (data && data.ok === false && data.message && data.message.toLowerCase().includes("token"))) {
+          console.warn("Token inválido o faltante, limpiando y redirigiendo a login");
+          localStorage.removeItem("ogaac_token");
+          window.location.href = "login.html";
+          return;
+        }
+
+        // Si responde raro (404, 500, etc.), dejamos pasar pero logueamos
+        if (!res.ok) {
+          console.warn("Backend /api/check respondió algo no esperado, pero se permite el acceso:", res.status, data);
+        }
+
+        // Si llegamos acá, seguimos normalmente e iniciamos el monitoreo de salas
+        iniciarMonitoreoSalas();
+      } catch (err) {
+        console.error("Error llamando a /api/check:", err);
+        // Si el backend no responde, igual iniciamos las salas
+        iniciarMonitoreoSalas();
+      }
+    }
+
+    // --- Lógica de salas / HLS ---
+    function openSala(url) {
+      window.location.href = url;
+    }
+
+    const SALA_CONFIG = [
+      { id: 'sala10', sede: 'suipacha', sala: 'sala10', page: 'sala10.html' },
+      { id: 'sala9', sede: 'suipacha', sala: 'sala9', page: 'sala9.html' },
+      { id: 'sala8', sede: 'suipacha', sala: 'sala8', page: 'sala8.html' },
+      { id: 'sala4', sede: 'suipacha', sala: 'sala4', page: 'sala4.html' },
+      { id: 'sala3', sede: 'suipacha', sala: 'sala3', page: 'sala3.html' },
+    ];
+
+    const STATUS_LABELS = {
+      live: 'En vivo',
+      nosignal: 'Sin señal',
+      offline: 'Offline',
+    };
+
+    const MAX_CONCURRENT = 4;
+    const REFRESH_MS = 12000;
+    let refreshInFlight = false;
+
+    function setDiag(def, meta = {}) {
+      const el = document.getElementById(`diag-${def.id}`);
+      if (!el) return;
+      const url = window.OGAAC_HLS.buildHlsUrl(def.sede, def.sala);
+      const parts = [url];
+      if (meta.label) parts.push(meta.label);
+      if (meta.contentType) parts.push(meta.contentType);
+      el.textContent = `HLS: ${parts.join(' · ')}`;
+    }
+
+    function setCardState(def, state) {
+      const dot = document.getElementById(`dot-${def.id}`);
+      const text = document.getElementById(`text-${def.id}`);
+      if (!dot || !text) return;
+      if (state === 'live') {
+        dot.classList.add('online');
+        dot.classList.remove('offline');
+      } else {
+        dot.classList.remove('online');
+        dot.classList.add('offline');
+      }
+      text.textContent = STATUS_LABELS[state] || 'Sin señal';
+    }
+
+    function updateSummary(counters) {
+      const summary = document.getElementById('salas-summary');
+      if (!summary) return;
+      summary.textContent = `En vivo: ${counters.live} · Sin señal: ${counters.nosignal} · Offline: ${counters.offline} · Total: ${SALA_CONFIG.length}`;
+    }
+
+    async function checkSala(def) {
+      const url = window.OGAAC_HLS.buildHlsUrl(def.sede, def.sala);
+      setDiag(def, { label: 'verificando…' });
+      try {
+        const head = await window.OGAAC_HLS.headHls(url, { timeoutMs: 4500 });
+        const label = head.status ? `HTTP ${head.status}` : (head.error || 'sin respuesta');
+        const contentType = head.contentType || '';
+        setDiag(def, { label, contentType });
+        if (head.ok && /mpegurl/i.test(head.contentType || '')) {
+          setCardState(def, 'live');
+          return 'live';
+        }
+        if (head.status === 403 || head.status === 404) {
+          setCardState(def, 'nosignal');
+          return 'nosignal';
+        }
+        setCardState(def, 'offline');
+        return 'offline';
+      } catch (err) {
+        setDiag(def, { label: err?.message || 'error' });
+        setCardState(def, 'offline');
+        return 'offline';
+      }
+    }
+
+    async function refreshSalas() {
+      if (refreshInFlight || !window.OGAAC_HLS) return;
+      refreshInFlight = true;
+      const counters = { live: 0, nosignal: 0, offline: 0 };
+      let cursor = 0;
+
+      async function worker() {
+        while (cursor < SALA_CONFIG.length) {
+          const current = SALA_CONFIG[cursor++];
+          if (!current) break;
+          const state = await checkSala(current);
+          counters[state] = (counters[state] || 0) + 1;
+        }
+      }
+
+      const workers = Array.from({ length: Math.min(MAX_CONCURRENT, SALA_CONFIG.length) }, () => worker());
+      await Promise.all(workers);
+      updateSummary(counters);
+      refreshInFlight = false;
+    }
+
+    function iniciarMonitoreoSalas() {
+      refreshSalas();
+      setInterval(refreshSalas, REFRESH_MS);
+    }
+
+    // Arrancamos todo: primero validamos token
+    validarTokenYIniciar();
+  </script>
+</body>
+</html>

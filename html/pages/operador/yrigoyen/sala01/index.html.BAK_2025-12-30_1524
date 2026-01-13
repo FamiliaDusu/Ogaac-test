@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Operador · Suipacha · sala 10</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- CSS base -->
+  <link rel="stylesheet" href="/ogaac.css" />
+  <link rel="stylesheet" href="/css/sala-stream.css" />
+  <!-- Layout Control Room (cine) -->
+  <link rel="stylesheet" href="/operador/_shared/css/control-room.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <!-- SOLO estilos de Audiencia (no layout) -->
+  <style>
+    .aud-box{
+      margin-top:10px;
+      display:grid;
+      gap:8px;
+      width:100%;
+    }
+    .aud-row2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px;
+    }
+    .aud-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .aud-box input,
+    .aud-box select{
+      width:100%;
+      box-sizing:border-box;
+      padding:7px 9px;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,.12);
+      background:#fff;
+      font-size:13px;
+    }
+    @media (max-width:520px){
+      .aud-row2{ grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+
+<body class="page stream-page">
+
+<header class="ogaac-header header-control-room">
+  <div class="header-left">
+    <div class="ogaac-brand-title">OGAAC · Salas en vivo</div>
+  </div>
+
+  <!-- TÍTULO CENTRAL -->
+  <div class="header-center">
+    SUIPACHA · SALA10
+  </div>
+
+  <div class="header-right">
+    <button class="btn-logout" type="button" onclick="ogaacLogout()">Cerrar sesión</button>
+  </div>
+</header>
+
+
+<main class="page-main">
+  <div class="content-inner">
+
+    <div class="page-subheader" style="display:flex; align-items:center; gap:10px; flex-wrap:nowrap; margin:6px 0 10px;">
+  <button class="btn-ghost btn" type="button" onclick="window.location.href='/index.html'">← Volver al Portal</button>
+  <button class="btn-ghost btn" type="button" onclick="window.location.href='/operador/' + OGAAC_SEDE + '/'">← Volver a la sede</button>
+</div>
+
+<!-- ================= GRID PRINCIPAL ================= -->
+<div class="control-grid">
+
+  <!-- ================= VIDEO (IZQUIERDA - GRANDE) ================= -->
+  <article class="card card-stream">
+    <div class="card-header">
+      <div class="card-title-inline">Visualización interna</div>
+      <div id="statusTag" class="status-tag">Verificando…</div>
+    </div>
+
+    <div class="video-wrapper">
+      <video id="video" controls autoplay muted playsinline></video>
+    </div>
+
+    <div id="status">Cargando stream…</div>
+  </article>
+
+  <!-- ================= AUDIENCIA (DERECHA ARRIBA) ================= -->
+  <article class="card card-audiencia">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Audiencia</div>
+        <div class="panel-note">Carga + Overlay + Cartel web</div>
+      </div>
+    </div>
+
+    <div class="aud-box" style="padding:12px 14px 14px;">
+  <div style="display:flex; gap:8px; align-items:center;">
+    <b style="font-size:12px;">Audiencia</b>
+    <span id="aud-msg" style="font-size:12px; opacity:.7;"></span>
+  </div>
+
+  <!-- FUERO + FECHA -->
+  <div class="aud-row2">
+    <input id="aud-fecha" type="date">
+    <select id="aud-fuero"></select>
+  </div>
+
+  <!-- JUZGADO/SALA + EXP -->
+  <div class="aud-row2">
+    <select id="aud-juzgado"></select>
+    <input id="aud-exp" placeholder="Expediente">
+  </div>
+
+  <!-- SALA + (opcional) -->
+  <div class="aud-row2">
+    <select id="aud-sala">
+      <option value="10">Sala 10</option>
+      <option value="9">Sala 9</option>
+      <option value="8">Sala 8</option>
+      <option value="4">Sala 4</option>
+      <option value="3">Sala 3</option>
+    </select>
+    <select id="aud-tipo"></select>
+  </div>
+
+  <input id="aud-caratula" placeholder="Carátula">
+  <input id="aud-imputados" placeholder="Cantidad imputados">
+
+  <div class="aud-actions">
+    <button class="btn" onclick="audSave()">Guardar</button>
+    <button class="btn" onclick="audApplyToOBS()">Aplicar a video</button>
+    <button class="btn" id="btn-overlay" onclick="audToggleOverlay()">Overlay</button>
+    <button class="btn" id="btn-banner" onclick="audToggleBanner()">Cartel web</button>
+    <button class="btn btn-secondary" onclick="audClear()">Limpiar</button>
+  </div>
+</div>
+
+  </article>
+
+  <!-- ================= CONTROL OBS (DERECHA ABAJO) ================= -->
+  <article class="card card-obsright">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Control OGAAC · Control OBS</div>
+        <div class="panel-note">Sala 10 (Suipacha)</div>
+      </div>
+      <span id="obsApiStatus" class="pill">OBS: ...</span>
+          <a class="panel-note" id="obsAdvancedLink" href="/web-socket-obs/index.html" target="_blank">Avanzado</a>
+          <a class="panel-note" id="obsBasicLink" href="/web-socket-obs/basic.html" target="_blank">Básico</a>
+          <a class="panel-note" href="/web-socket-obs/" target="_blank">Abrir</a>
+    </div>
+
+    <iframe class="panel-iframe"
+            src="/web-socket-obs/basic.html?sede=yrigoyen&sala=sala01"
+            title="Control OBS Sala 10"
+            loading="lazy"></iframe>
+  </article>
+
+</div>
+
+
+  </div>
+</main>
+
+<footer class="ogaac-footer">
+  OGAAC · Sala 10 Suipacha
+</footer>
+
+<!-- ================= STREAM ================= -->
+
+<script>
+  // Identidad fija de esta sala (para clonar a otras sin errores)
+  const OGAAC_SEDE = "yrigoyen";
+  const OGAAC_SALA = "sala01";
+</script>
+
+
+<script>
+const video=document.getElementById("video");
+const status=document.getElementById("status");
+const statusTag=document.getElementById("statusTag");
+const src = `/hls/${OGAAC_SEDE}/${OGAAC_SALA}/stream.m3u8`;
+
+function ok(){
+  statusTag.textContent="En vivo";
+  statusTag.className="status-tag status-ok";
+}
+function fail(t){
+  status.textContent=t||"Sin señal";
+  statusTag.textContent="Sin señal";
+  statusTag.className="status-tag status-error";
+}
+
+if(window.Hls && Hls.isSupported()){
+  const hls=new Hls();
+  hls.loadSource(src);
+  hls.attachMedia(video);
+  hls.on(Hls.Events.MANIFEST_PARSED,()=>video.play().then(ok).catch(ok));
+}else{
+  video.src=src;
+  video.onloadedmetadata=()=>video.play().then(ok);
+}
+</script>
+
+<!-- ================= AUTH ================= -->
+<script>
+(async()=>{
+  const r=await fetch("/api/check",{credentials:"include"}).catch(()=>null);
+  if(!r||!r.ok) location.href="login.html";
+})();
+function ogaacLogout(){ location.href="login.html"; }
+</script>
+
+<!-- ================= AUDIENCIA SCRIPT (sin cambios funcionales) ================= -->
+<!-- 👉 acá dejás EXACTAMENTE el JS que ya tenías -->
+<script>
+/* ============================
+   Catálogo Fuero / Órgano / Tipo
+   ============================ */
+
+function pad2(n){ return String(n).padStart(2,"0"); }
+function todayISO(){
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+}
+function fillSelect(sel, values, {placeholder=null} = {}){
+  if(!sel) return;
+  sel.innerHTML = "";
+  if(placeholder){
+    const o = document.createElement("option");
+    o.value = "";
+    o.textContent = placeholder;
+    o.disabled = true;
+    o.selected = true;
+    sel.appendChild(o);
+  }
+  values.forEach(v=>{
+    const o = document.createElement("option");
+    o.value = v;
+    o.textContent = v;
+    sel.appendChild(o);
+  });
+}
+
+/* Catálogo */
+const CATALOG = [
+  {
+    fuero: "FUERO PENAL, CONTRAVENCIONAL Y DE FALTAS",
+    organos: Array.from({length:31}, (_,i)=>`JUZGADO N° ${i+1}`),
+    tipos: [
+      "ADMISIBILIDAD DE PRUEBA",
+      "ADMISIBILIDAD DE PRUEBA CON OTROS PLANTEOS",
+      "AVENIMIENTO",
+      "CESE DE MEDIDAS RESTRICTIVAS",
+      "CONCILIACIÓN",
+      "CONTROL DE SUSPENSIÓN DE JUICIO A PRUEBA",
+      "CONOCIMIENTO PERSONAL",
+      "ETAPA EJECUCIÓN",
+      "EXCEPCIONES",
+      "EXENCION DE PRISION",
+      "JUICIO ORAL",
+      "LEGITIMACIÓN DE QUERELLA",
+      "MEDIACIÓN",
+      "MEDIDAS RESTRICTIVAS",
+      "NULIDAD",
+      "OTROS MOTIVOS",
+      "PRISIÓN PREVENTIVA",
+      "RECUSACIÓN",
+      "RESTITUCIÓN",
+      "SUSPENSIÓN DE PROCESO A PRUEBA",
+      "AUDIENCIA MULTIPROPÓSITO",
+      "IMPOSICIÓN/MORIGERACIÓN DE MEDIDAS RESTRICTIVAS",
+      "208 - LEY 24.660",
+      "HABEAS CORPUS",
+      "VOIR DIRE (SELECCIÓN DE JURADO)"
+    ]
+  },
+  {
+    fuero: "FUERO PENAL JUVENIL, CONTRAVENCIONAL Y DE FALTAS",
+    organos: ["JUZGADO N° 1","JUZGADO N° 2","JUZGADO N° 3"],
+    tipos: [
+      "ADMISIBILIDAD DE PRUEBA",
+      "ADMISIBILIDAD DE PRUEBA CON OTROS PLANTEOS",
+      "AVENIMIENTO",
+      "CESE DE MEDIDAS RESTRICTIVAS",
+      "CONCILIACIÓN",
+      "CONTROL DE SUSPENSIÓN DE JUICIO A PRUEBA",
+      "CONOCIMIENTO PERSONAL",
+      "DEBATE RPPJ",
+      "ETAPA EJECUCIÓN",
+      "EXCEPCIONES",
+      "EXENCION DE PRISION",
+      "JUICIO DE CESURA RPPJ",
+      "LEGITIMACIÓN DE QUERELLA",
+      "MEDIACIÓN",
+      "MEDIDAS RESTRICTIVAS",
+      "NULIDAD",
+      "OTROS MOTIVOS",
+      "PRISIÓN PREVENTIVA",
+      "RECUSACIÓN",
+      "RESTITUCIÓN",
+      "SUSPENSIÓN DE PROCESO A PRUEBA",
+      "AUDIENCIA MULTIPROPÓSITO",
+      "HABEAS CORPUS",
+      "IMPOSICIÓN/MORIGERACIÓN DE MEDIDAS RESTRICTIVAS",
+      "RESTITUCIÓN"
+    ]
+  },
+  {
+    fuero: "CÁMARA DE CASACIÓN Y APELACIONES PENAL, PENAL JUVENIL, CONTRAVENCIONAL Y DE FALTAS",
+    organos: ["SALA I","SALA II","SALA III","SALA IV"],
+    tipos: [
+      "RECURSO DE APELACIÓN",
+      "RECURSO DE CASACIÓN",
+      "CONVOCATORIA POR RECUSACIÓN",
+      "CONOCIMIENTO PERSONAL"
+    ]
+  },
+  {
+    fuero: "FUERO CONTENCIOSO ADMINISTRATIVO TRIBUTARIO Y DE RELACIONES DE CONSUMO",
+    organos: Array.from({length:27}, (_,i)=>`JUZGADO N° ${i+1}`),
+    tipos: [
+      "AUDIENCIA DE RECEPCIÓN DE DEMANDA",
+      "AUDIENCIA DE CONCILIACIÓN PREVIA EN RELACIONES DE CONSUMO",
+      "MEDIDAS CAUTELARES",
+      "AUDIENCIA PROBATORIA",
+      "AUDIENCIA DE TRÁMITES PARA INCIDENTES",
+      "JUICIO ORAL",
+      "AUDIENCIA DE VISTA TECNICA",
+      "AUDIENCIA DE CONCILIACIÓN/HOMOLOGACIÓN DE ACUERDO",
+      "VISTA DE CAUSA"
+    ]
+  }
+];
+
+function getFueroObj(fueroName){
+  return CATALOG.find(x => x.fuero === fueroName) || CATALOG[0];
+}
+
+function refreshByFuero(fueroName){
+  const f = getFueroObj(fueroName);
+  const elJuzgado = document.getElementById("aud-juzgado");
+  const elTipo    = document.getElementById("aud-tipo");
+
+  fillSelect(elJuzgado, f.organos, { placeholder: "Órgano (Juzgado / Sala)" });
+  fillSelect(elTipo, f.tipos, { placeholder: "Tipo de audiencia" });
+}
+
+(function initAudienciaCatalog(){
+  const elFecha = document.getElementById("aud-fecha");
+  const elFuero = document.getElementById("aud-fuero");
+
+  // Fecha automática
+  if(elFecha && !elFecha.value) elFecha.value = todayISO();
+
+  // Fuero
+  const fueros = CATALOG.map(x => x.fuero);
+  fillSelect(elFuero, fueros, { placeholder: "Fuero" });
+
+  // Default: el primero (o el que vos quieras)
+  // Si querés que arranque por Penal común:
+  const defaultFuero = "FUERO PENAL, CONTRAVENCIONAL Y DE FALTAS";
+  elFuero.value = fueros.includes(defaultFuero) ? defaultFuero : fueros[0];
+
+  refreshByFuero(elFuero.value);
+
+  elFuero.addEventListener("change", () => {
+    refreshByFuero(elFuero.value);
+  });
+})();
+</script>
+
+  <script src="/operador/_shared/panel.js"></script>
+</body>
+</html>

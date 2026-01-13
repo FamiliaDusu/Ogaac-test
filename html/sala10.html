@@ -1,0 +1,182 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sala 10 · Suipacha · Streaming en vivo</title>
+
+  <!-- CSS institucional -->
+  <link rel="stylesheet" href="ogaac.css" />
+  <!-- CSS específico para páginas de streaming -->
+  <link rel="stylesheet" href="css/sala-stream.css" />
+  <link rel="stylesheet" href="css/hls-diagnostics.css" />
+
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+
+<body class="page stream-page">
+
+  <!-- BARRA SUPERIOR -->
+  <header class="ogaac-header">
+    <div class="ogaac-brand">
+      <div class="ogaac-brand-title">OGAAC · Salas en vivo</div>
+      <div class="ogaac-brand-subtitle">
+        Streaming de audiencias · Sede Suipacha
+      </div>
+    </div>
+    <!-- INFO AUDIENCIA (cartel) -->
+<div id="audienciaBanner" class="card-body" style="display:none; border-top:1px solid rgba(255,255,255,.06); margin-top:10px;">
+  <div style="font-weight:700; margin-bottom:6px;">Audiencia actual</div>
+  <div id="audienciaText" style="white-space:pre-line;"></div>
+  <div id="audienciaUpdated" style="opacity:.75; font-size:12px; margin-top:6px;"></div>
+</div>
+
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="nav-pill">Acceso restringido · Usuario autorizado</div>
+
+      <button class="btn-logout" type="button" onclick="ogaacLogout()">
+        Cerrar sesión
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENIDO -->
+  <main class="page-main">
+    <div class="content-inner">
+
+      <!-- Encabezado estilo audiencias.html -->
+      <div class="page-subheader">
+        <div class="page-subheader-main">
+          <h1>Sala 10 · Sede Suipacha</h1>
+          <p>Streaming en vivo de audiencias judiciales para uso interno OGAAC.</p>
+        </div>
+
+        <div class="back-link">
+          <a href="index.html">&larr; Volver al portal de salas en vivo</a>
+        </div>
+      </div>
+
+
+
+      <!-- CARD CON VIDEO -->
+      <article class="card card-stream">
+        <div class="card-header">
+          <div class="card-title-inline">Visualización interna OGAAC</div>
+          <div id="statusTag" class="status-tag">Verificando señal...</div>
+        </div>
+
+        <div class="card-body">
+          Esta vista permite monitorear en tiempo real la señal de la Sala 10,
+          exclusivamente para personal autorizado de la OGAAC.
+        </div>
+
+        <div class="video-wrapper">
+          <video id="video" controls autoplay muted playsinline></video>
+        </div>
+        <div id="status">Cargando stream...</div>
+
+        <div class="stream-diagnostics" id="diagPanel">
+          <div class="diag-heading">Diagnóstico HLS</div>
+          <div class="diag-row">
+            <span>URL HLS:</span>
+            <span id="diag-url">—</span>
+          </div>
+          <div class="diag-grid">
+            <div class="diag-item">
+              <div class="diag-label">Manifest HTTP</div>
+              <div class="diag-value" id="diag-http">—</div>
+            </div>
+            <div class="diag-item">
+              <div class="diag-label">Content-Type</div>
+              <div class="diag-value" id="diag-ctype">—</div>
+            </div>
+            <div class="diag-item">
+              <div class="diag-label">Segmento</div>
+              <div class="diag-value" id="diag-segment">—</div>
+            </div>
+            <div class="diag-item">
+              <div class="diag-label">Segment HTTP</div>
+              <div class="diag-value" id="diag-segment-http">—</div>
+            </div>
+            <div class="diag-item">
+              <div class="diag-label">Última revisión</div>
+              <div class="diag-value" id="diag-updated">—</div>
+            </div>
+          </div>
+          <div class="diag-message" id="diag-message">Validación pendiente.</div>
+          <div class="diag-preview" id="diag-preview">(sin datos)</div>
+          <div class="diag-actions">
+            <button type="button" id="btn-retry">Reintentar validación</button>
+            <button type="button" id="btn-play">Reproducir manualmente</button>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="ogaac-footer">
+    OGAAC · Uso interno · Sala 3 Suipacha · Plataforma técnica Nginx + RTMP + HLS
+  </footer>
+
+  <script>
+    window.SALA_PAGE = { sede: 'suipacha', sala: 'sala10', label: 'Sala 10 Suipacha' };
+  </script>
+  <script src="/_shared/hls-player.js"></script>
+  <script src="/_shared/sala-player.js"></script>
+  <script>
+    function ogaacLogout() {
+      try {
+        localStorage.removeItem("ogaac_token");
+        sessionStorage.clear();
+      } catch {}
+      window.location.replace("login.html");
+    }
+  </script>
+<script>
+  function formatAudiencia(fields) {
+    const fecha = fields.fecha || "";
+    const sede = fields.sede || "";
+    const juzgado = fields.juzgado || "";
+    const sala = fields.sala || "";
+    const expediente = fields.expediente || "";
+    const caratula = fields.caratula || "";
+    const imputados = fields.imputados || "";
+    const tipo = fields.tipoProcedimiento || "";
+
+    const l1 = [fecha && `Fecha: ${fecha}`, sede && `Sede: ${sede}`, juzgado && `Juzgado: ${juzgado}`, sala && `Sala: ${sala}`].filter(Boolean).join(" · ");
+    const l2 = [expediente && `Expte: ${expediente}`, caratula].filter(Boolean).join(" · ");
+    const l3 = [tipo && `Tipo: ${tipo}`, imputados && `Imputados: ${imputados}`].filter(Boolean).join(" · ");
+
+    return [l1, l2, l3].filter(Boolean).join("\n");
+  }
+
+  async function refreshAudienciaBanner() {
+    try {
+      const res = await fetch("/api/obs/sala10/audiencia/get", { credentials: "include" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) return;
+
+      const banner = document.getElementById("audienciaBanner");
+      const txt = document.getElementById("audienciaText");
+      const upd = document.getElementById("audienciaUpdated");
+
+      const visible = data.data?.visibleBanner !== false; // default true
+      if (!visible) { banner.style.display = "none"; return; }
+
+      const fields = data.data?.fields || {};
+      txt.textContent = formatAudiencia(fields);
+      upd.textContent = data.data?.updatedAt ? ("Actualizado: " + data.data.updatedAt) : "";
+      banner.style.display = "block";
+    } catch (e) {
+      console.warn("No pude cargar audiencia/banner:", e);
+    }
+  }
+
+  refreshAudienciaBanner();
+  setInterval(refreshAudienciaBanner, 10000);
+</script>
+
+</body>
+</html>

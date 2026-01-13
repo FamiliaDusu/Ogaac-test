@@ -1,0 +1,110 @@
+(() => {
+  const cfg = window.OGAAC || {};
+  const SEDE = cfg.sede;
+  const SALA = cfg.sala;
+
+  if (!SEDE || !SALA) {
+    console.error("Falta window.OGAAC {sede,sala}. ¿Cargaste config.js?");
+    return;
+  }
+
+  // ------------------ AUTH ------------------
+  async function checkAuthOrRedirect() {
+    try {
+      const r = await fetch("/api/check", { credentials: "include" });
+      if (!r.ok) location.href = "/login.html";
+    } catch {
+      location.href = "/login.html";
+    }
+  }
+
+  window.ogaacLogout = function ogaacLogout() {
+    location.href = "/login.html";
+  };
+
+  // ------------------ STREAM HLS ------------------
+  function initHlsPlayer() {
+    const video = document.getElementById("video");
+    const status = document.getElementById("status");
+    const statusTag = document.getElementById("statusTag");
+    if (!video || !status || !statusTag) return;
+
+    const src = `/hls/${SEDE}/${SALA}/stream.m3u8`;
+
+    function ok() {
+      statusTag.textContent = "En vivo";
+      statusTag.className = "status-tag status-ok";
+    }
+    function fail(msg) {
+      status.textContent = msg || "Sin señal";
+      statusTag.textContent = "Sin señal";
+      statusTag.className = "status-tag status-error";
+    }
+
+    try {
+      if (window.Hls && window.Hls.isSupported()) {
+        const hls = new window.Hls();
+        hls.loadSource(src);
+        hls.attachMedia(video);
+
+        hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+          video.play().then(ok).catch(ok);
+        });
+
+        hls.on(window.Hls.Events.ERROR, (_, data) => {
+          if (data && data.fatal) fail("Sin señal (HLS fatal)");
+        });
+      } else {
+        video.src = src;
+        video.onloadedmetadata = () => video.play().then(ok).catch(ok);
+        video.onerror = () => fail("Sin señal (video error)");
+      }
+    } catch (e) {
+      console.error(e);
+      fail("Sin señal (exception)");
+    }
+  }
+
+  // ------------------ NAV ------------------
+  function wireNavButtons() {
+    const btnSede = document.getElementById("btnVolverSede");
+    if (btnSede) btnSede.onclick = () => (location.href = `/operador/${SEDE}/`);
+
+    const headerCenter = document.querySelector(".header-center");
+    if (headerCenter && cfg.salaLabel) headerCenter.textContent = cfg.salaLabel;
+  }
+
+  // ------------------ OBS API STATUS BADGE ------------------
+  function setObsBadge(text, ok) {
+    const el = document.getElementById("obsApiStatus");
+    if (!el) return;
+    el.textContent = text;
+    el.className = "pill " + (ok ? "status-ok" : "status-error");
+  }
+
+  async function pollObsStatus() {
+    const url = `/api/obs/${encodeURIComponent(SEDE)}/${encodeURIComponent(SALA)}/status`;
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 1500);
+    try {
+      const r = await fetch(url, { credentials: "include", signal: controller.signal });
+      const j = await r.json().catch(() => null);
+      if (r.ok && j && j.ok) setObsBadge("OBS: OK", true);
+      else setObsBadge("OBS: OFF", false);
+    } catch {
+      setObsBadge("OBS: OFF", false);
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  // ------------------ INIT ------------------
+  window.addEventListener("DOMContentLoaded", async () => {
+    wireNavButtons();
+    await checkAuthOrRedirect();
+    initHlsPlayer();
+    // OBS badge (si existe en el HTML)
+    await pollObsStatus();
+    setInterval(pollObsStatus, 2500);
+  });
+})();

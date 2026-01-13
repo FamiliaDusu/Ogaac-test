@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sala 4 · Suipacha · Streaming en vivo</title>
+
+  <!-- CSS institucional -->
+  <link rel="stylesheet" href="ogaac.css" />
+  <!-- CSS específico para páginas de streaming -->
+  <link rel="stylesheet" href="css/sala-stream.css" />
+  <link rel="stylesheet" href="css/hls-diagnostics.css" />
+
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+
+<body class="page stream-page">
+
+  <!-- BARRA SUPERIOR -->
+  <header class="ogaac-header">
+    <div class="ogaac-brand">
+      <div class="ogaac-brand-title">OGAAC · Salas en vivo</div>
+      <div class="ogaac-brand-subtitle">
+        Streaming de audiencias · Sede Suipacha
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="nav-pill">Acceso restringido · Usuario autorizado</div>
+
+      <button class="btn-logout" type="button" onclick="ogaacLogout()">
+        Cerrar sesión
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENIDO -->
+  <main class="page-main">
+    <div class="content-inner">
+
+      <!-- Encabezado estilo audiencias.html -->
+      <div class="page-subheader">
+        <div class="page-subheader-main">
+          <h1>Sala 4 · Sede Suipacha</h1>
+          <p>Streaming en vivo de audiencias judiciales para uso interno OGAAC.</p>
+        </div>
+
+        <div class="back-link">
+          <a href="index.html">&larr; Volver al portal de salas en vivo</a>
+        </div>
+      </div>
+
+
+
+      <!-- CARD CON VIDEO -->
+      <article class="card card-stream">
+        <div class="card-header">
+          <div class="card-title-inline">Visualización interna OGAAC</div>
+          <div id="statusTag" class="status-tag">Verificando señal...</div>
+        </div>
+
+        <div class="card-body">
+          Esta vista permite monitorear en tiempo real la señal de la Sala 4,
+          exclusivamente para personal autorizado de la OGAAC.
+        </div>
+
+        <div class="video-wrapper">
+          <video id="video" controls autoplay muted playsinline></video>
+        </div>
+        <div id="status">Cargando stream...</div>
+
+        <div class="stream-diagnostics" id="diagPanel">
+          <div class="diag-heading">Diagnóstico HLS</div>
+          <div class="diag-row">
+            <span>URL HLS:</span>
+            <span id="diag-url">—</span>
+          </div>
+          <div class="diag-grid">
+            <div class="diag-item">
+              <div class="diag-label">Manifest HTTP</div>
+              <div class="diag-value" id="diag-http">—</div>
+            </div>
+            <div class="diag-item">
+              <div class="diag-label">Content-Type</div>
+              <div class="diag-value" id="diag-ctype">—</div>
+            </div>
+            <div class="diag-item">
+              <div class="diag-label">Segmento</div>
+              <div class="diag-value" id="diag-segment">—</div>
+            </div>
+            <div class="diag-item">
+              <div class="diag-label">Segment HTTP</div>
+              <div class="diag-value" id="diag-segment-http">—</div>
+            </div>
+            <div class="diag-item">
+              <div class="diag-label">Última revisión</div>
+              <div class="diag-value" id="diag-updated">—</div>
+            </div>
+          </div>
+          <div class="diag-message" id="diag-message">Validación pendiente.</div>
+          <div class="diag-preview" id="diag-preview">(sin datos)</div>
+          <div class="diag-actions">
+            <button type="button" id="btn-retry">Reintentar validación</button>
+            <button type="button" id="btn-play">Reproducir manualmente</button>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="ogaac-footer">
+    OGAAC · Uso interno · Sala 3 Suipacha · Plataforma técnica Nginx + RTMP + HLS
+  </footer>
+
+  <script>
+    window.SALA_PAGE = { sede: 'suipacha', sala: 'sala4', label: 'Sala 4 Suipacha' };
+  </script>
+  <script src="/_shared/hls-player.js"></script>
+  <script src="/_shared/sala-player.js"></script>
+
+  <!-- TOKEN CHECK -->
+  <script>
+    (async function () {
+      const token = localStorage.getItem("ogaac_token");
+      if (!token) { window.location.href = "login.html"; return; }
+
+      try {
+        const res = await fetch("/api/check", {
+          method: "GET",
+          headers: { "Authorization": "Bearer " + token }
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data.ok) {
+          localStorage.removeItem("ogaac_token");
+          window.location.href = "login.html";
+        }
+      } catch (err) {
+        console.error("[auth] Error al validar token:", err);
+        localStorage.removeItem("ogaac_token");
+        window.location.href = "login.html";
+      }
+    })();
+
+    function ogaacLogout() {
+      try {
+        localStorage.removeItem("ogaac_token");
+        sessionStorage.clear();
+      } catch {}
+      window.location.replace("login.html");
+    }
+  </script>
+
+</body>
+</html>

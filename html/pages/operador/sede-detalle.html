@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>OGAAC · Operador · Sede</title>
+  <link rel="stylesheet" href="/ogaac.css">
+  <link rel="stylesheet" href="/css/ogaac-operador.css">
+  <style>
+    /* ========= LOCAL: Layout específico para detalle sede ========= */
+    .sede-detalle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      padding: 0 16px 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .sede-title-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 16px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .sede-title-bar h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sede-title-bar h1 .sede-badge {
+      font-size: 13px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+    .sede-stats-inline {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .sede-stats-inline .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: var(--text-muted, #666);
+    }
+    .sede-stats-inline .stat-item .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .sede-stats-inline .stat-item .dot.live   { background: var(--color-ok, #3fbf6b); }
+    .sede-stats-inline .stat-item .dot.recording { background: var(--color-recording, #ff9500); }
+    .sede-stats-inline .stat-item .dot.idle   { background: var(--color-warn, #f5a623); }
+    .sede-stats-inline .stat-item .dot.off    { background: var(--color-danger, #f25f5c); }
+
+    /* Breadcrumb */
+    .breadcrumb-bar {
+      padding: 12px 16px;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+    .breadcrumb-bar a {
+      color: var(--text-link, #0066cc);
+      text-decoration: none;
+    }
+    .breadcrumb-bar a:hover {
+      text-decoration: underline;
+    }
+    .breadcrumb-bar .sep {
+      color: var(--text-muted, #999);
+    }
+
+    /* Card sala */
+    .sala-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      border: 1px solid rgba(0,0,0,.08);
+      overflow: hidden;
+      transition: box-shadow .15s, transform .15s;
+    }
+    .sala-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,.10);
+      transform: translateY(-2px);
+    }
+    .sala-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(0,0,0,.06);
+      background: rgba(0,0,0,.01);
+    }
+    .sala-card-header .sala-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .sala-card-header .sala-status {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+    .sala-card-header .sala-status.live {
+      background: rgba(63,191,107,.15);
+      color: #1e7a3d;
+    }
+    .sala-card-header .sala-status.recording {
+      background: rgba(255,149,0,.15);
+      color: #b36800;
+    }
+    .sala-card-header .sala-status.idle {
+      background: rgba(245,166,35,.15);
+      color: #9a6c17;
+    }
+    .sala-card-header .sala-status.off {
+      background: rgba(242,95,92,.12);
+      color: #a03533;
+    }
+    .sala-card-header .sala-status.unknown {
+      background: rgba(0,0,0,.08);
+      color: #666;
+    }
+    .sala-card-body {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sala-card-body .sala-info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted, #666);
+    }
+    .sala-card-body .sala-info-row .icon {
+      width: 18px;
+      text-align: center;
+    }
+    .sala-card-footer {
+      padding: 12px 16px;
+      border-top: 1px solid rgba(0,0,0,.06);
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .sala-card-footer .btn-sm {
+      font-size: 13px;
+      padding: 6px 14px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted, #666);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state h3 { margin: 0 0 8px; font-size: 18px; color: var(--text-main, #303030); }
+    .empty-state p { margin: 0; }
+  </style>
+</head>
+<body class="page">
+
+<header class="ogaac-header">
+  <div class="ogaac-brand">
+    <div class="ogaac-brand-title">OGAAC · Operador</div>
+    <div class="ogaac-brand-subtitle" id="header-subtitle">Cargando sede...</div>
+  </div>
+  <div class="ogaac-header-actions">
+    <a class="btn btn-ghost" href="/operador/sedes.html">← Volver a Sedes</a>
+    <span class="nav-pill">Modo Operador</span>
+    <button data-action="logout" class="btn btn-ghost" title="Cerrar sesión">🚪 Salir</button>
+  </div>
+</header>
+
+<nav class="breadcrumb-bar">
+  <a href="/operador/sedes.html">Sedes</a>
+  <span class="sep">›</span>
+  <span id="breadcrumb-sede">...</span>
+</nav>
+
+<section class="sede-title-bar">
+  <h1>
+    <span id="sede-name">Cargando...</span>
+    <span class="sede-badge" id="sede-badge" style="display:none"></span>
+  </h1>
+  <div class="sede-stats-inline" id="sede-stats">
+    <!-- Populated by JS -->
+  </div>
+</section>
+
+<main class="sede-detalle-grid" id="salas-grid">
+  <!-- Populated by JS -->
+</main>
+
+<footer class="ogaac-footer">
+  OGAAC · Sistema de Gestión de Audiencias · Uso interno
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  // ========= Configuration =========
+  const API_BASE   = '/api/obs';
+  const POLL_INTERVAL = 5000;
+
+  // ========= Detect sede from URL =========
+  function getSedeFromPath() {
+    // Expected paths: /operador/{sede}/ or /operador/{sede}/index.html
+    const path = location.pathname;
+    const match = path.match(/\/operador\/([a-z]+)\/?/i);
+    return match ? match[1].toLowerCase() : null;
+  }
+
+  const SEDE = getSedeFromPath();
+
+  if (!SEDE) {
+    document.getElementById('salas-grid').innerHTML = `
+      <div class="empty-state" style="grid-column: 1/-1;">
+        <div class="icon">⚠️</div>
+        <h3>Sede no identificada</h3>
+        <p>No se pudo detectar la sede desde la URL.<br>
+        <a href="/operador/sedes.html">Volver a la vista de sedes</a></p>
+      </div>`;
+    return;
+  }
+
+  // ========= DOM refs =========
+  const elSubtitle      = document.getElementById('header-subtitle');
+  const elBreadcrumb    = document.getElementById('breadcrumb-sede');
+  const elSedeName      = document.getElementById('sede-name');
+  const elSedeBadge     = document.getElementById('sede-badge');
+  const elSedeStats     = document.getElementById('sede-stats');
+  const elSalasGrid     = document.getElementById('salas-grid');
+
+  // ========= State =========
+  let salasConfig = [];   // Array of {sala, sede, ...} for this sede
+  let salasStatus = {};   // Map: salaId -> status object
+
+  // ========= Helpers =========
+  function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function buildSalaId(sede, sala) {
+    return `${sede}-${sala}`;
+  }
+
+  // ========= Initial setup =========
+  function setupUI() {
+    const sedeTitle = capitalize(SEDE);
+    document.title = `OGAAC · Operador · ${sedeTitle}`;
+    elSubtitle.textContent = `Sede ${sedeTitle}`;
+    elBreadcrumb.textContent = sedeTitle;
+    elSedeName.textContent = `Sede ${sedeTitle}`;
+  }
+
+  // ========= Fetch config =========
+  async function fetchConfig() {
+    try {
+      const resp = await fetch(`${API_BASE}/config`, { credentials: 'include' });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      
+      // Filter only this sede
+      salasConfig = (data.salas || []).filter(s => 
+        s.sede && s.sede.toLowerCase() === SEDE
+      );
+
+      if (salasConfig.length === 0) {
+        elSalasGrid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1/-1;">
+            <div class="icon">📭</div>
+            <h3>Sin salas configuradas</h3>
+            <p>No hay salas configuradas para la sede ${capitalize(SEDE)}.</p>
+          </div>`;
+        return;
+      }
+
+      renderSalas();
+      startPolling();
+    } catch (err) {
+      console.error('[Config] Error:', err);
+      elSalasGrid.innerHTML = `
+        <div class="empty-state" style="grid-column: 1/-1;">
+          <div class="icon">❌</div>
+          <h3>Error de conexión</h3>
+          <p>No se pudo cargar la configuración.<br>
+          <button class="btn btn-primary" onclick="location.reload()">Reintentar</button></p>
+        </div>`;
+    }
+  }
+
+  // ========= Render salas =========
+  function renderSalas() {
+    elSalasGrid.innerHTML = salasConfig.map(cfg => {
+      const salaId = buildSalaId(cfg.sede, cfg.sala);
+      const salaLabel = cfg.sala;
+      return `
+        <article class="sala-card" data-sala-id="${salaId}">
+          <div class="sala-card-header">
+            <span class="sala-name">${salaLabel}</span>
+            <span class="sala-status unknown" data-status-badge>Cargando...</span>
+          </div>
+          <div class="sala-card-body">
+            <div class="sala-info-row"><span class="icon">🎥</span> <span data-obs-status>OBS: --</span></div>
+            <div class="sala-info-row"><span class="icon">📡</span> <span data-stream-status>Stream: --</span></div>
+            <div class="sala-info-row"><span class="icon">🎤</span> <span data-rec-status>Grabación: --</span></div>
+          </div>
+          <div class="sala-card-footer">
+            <a class="btn btn-ghost btn-sm" href="/operador/${cfg.sede}/${cfg.sala}/" target="_blank">Abrir Panel</a>
+          </div>
+        </article>`;
+    }).join('');
+  }
+
+  // ========= Polling =========
+  async function pollStatus() {
+    const promises = salasConfig.map(async cfg => {
+      const salaId = buildSalaId(cfg.sede, cfg.sala);
+      const url = `${API_BASE}/${cfg.sede}/${cfg.sala}/status`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
+      
+      try {
+        const resp = await fetch(url, {
+          credentials: 'include',
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          salasStatus[salaId] = {
+            error: true,
+            errorCode: resp.status,
+            errorMsg: errData.code || errData.message || `HTTP ${resp.status}`
+          };
+          return;
+        }
+        
+        const data = await resp.json();
+        // Lógica unificada: computeSalaState
+        const ok = data.ok === true;
+        const streaming = ok && data.status?.outputActive === true;
+        const recording = ok && !streaming && data.status?.recordingActive === true;
+        salasStatus[salaId] = {
+          ok,
+          streaming,
+          recording,
+          raw: data
+        };
+      } catch (err) {
+        clearTimeout(timeout);
+        const isTimeout = err.name === 'AbortError';
+        salasStatus[salaId] = {
+          error: true,
+          errorCode: isTimeout ? 'TIMEOUT' : 'NETWORK',
+          errorMsg: isTimeout ? 'Timeout' : (err.message || 'Error de red')
+        };
+      }
+    });
+    await Promise.all(promises);
+    updateUI();
+  }
+
+  function updateUI() {
+    // Update each card
+    salasConfig.forEach(cfg => {
+      const salaId = buildSalaId(cfg.sede, cfg.sala);
+      const card = elSalasGrid.querySelector(`[data-sala-id="${salaId}"]`);
+      if (!card) return;
+
+      const status = salasStatus[salaId] || {};
+      const badge = card.querySelector('[data-status-badge]');
+      const obsEl = card.querySelector('[data-obs-status]');
+      const streamEl = card.querySelector('[data-stream-status]');
+      const recEl = card.querySelector('[data-rec-status]');
+
+      // Caso: Error de conexión/auth/timeout
+      if (status.error) {
+        const errLabel = status.errorCode === 401 ? 'No autorizado' :
+                         status.errorCode === 403 ? 'Acceso denegado' :
+                         status.errorCode === 'TIMEOUT' ? 'Timeout' :
+                         status.errorCode === 'NETWORK' ? 'Sin red' :
+                         `Error ${status.errorCode || ''}`;
+        badge.textContent = errLabel;
+        badge.className = 'sala-status off';
+        badge.title = status.errorMsg || '';
+        // OBJETIVO 2: Mostrar solo OBS con motivo, ocultar Stream/Grabación
+        obsEl.textContent = `OBS: ${status.errorMsg || 'Error'}`;
+        streamEl.style.display = 'none';
+        recEl.style.display = 'none';
+        return;
+      }
+
+      // OBJETIVO 2: Restaurar visibilidad si antes estaba oculto
+      streamEl.style.display = '';
+      recEl.style.display = '';
+
+      // Lógica unificada: streaming y recording ya normalizados
+      const isStreaming = status.streaming === true;
+      const isRecording = status.recording === true;
+      const obsOk = status.ok === true;
+
+      // Badge con 4 estados: EN VIVO > GRABANDO > Conectado > Desconectado
+      if (isStreaming) {
+        badge.textContent = '● EN VIVO';
+        badge.className = 'sala-status live';
+      } else if (isRecording) {
+        badge.textContent = '● GRABANDO';
+        badge.className = 'sala-status recording';
+      } else if (obsOk) {
+        badge.textContent = 'Conectado';
+        badge.className = 'sala-status idle';
+      } else {
+        badge.textContent = 'Desconectado';
+        badge.className = 'sala-status off';
+      }
+      badge.title = '';
+
+      // Details
+      obsEl.textContent = `OBS: ${obsOk ? 'Conectado' : 'Desconectado'}`;
+      streamEl.textContent = `Stream: ${isStreaming ? 'Transmitiendo' : 'Inactivo'}`;
+      recEl.textContent = `Grabación: ${isRecording ? 'Grabando' : 'Inactiva'}`;
+    });
+
+    // Update sede stats
+    updateSedeStats();
+  }
+
+  function updateSedeStats() {
+    let live = 0, recording = 0, idle = 0, off = 0;
+
+    salasConfig.forEach(cfg => {
+      const salaId = buildSalaId(cfg.sede, cfg.sala);
+      const status = salasStatus[salaId] || {};
+      // Lógica unificada: live > recording > idle > off
+      if (status.error) off++;
+      else if (status.streaming) live++;
+      else if (status.recording) recording++;
+      else if (status.ok) idle++;
+      else off++;
+    });
+
+    elSedeStats.innerHTML = `
+      <div class="stat-item"><span class="dot live"></span> ${live} en vivo</div>
+      ${recording > 0 ? `<div class="stat-item"><span class="dot recording"></span> ${recording} grabando</div>` : ''}
+      <div class="stat-item"><span class="dot idle"></span> ${idle} en espera</div>
+      <div class="stat-item"><span class="dot off"></span> ${off} sin conexión</div>
+    `;
+
+    // Sede badge
+    if (live > 0) {
+      elSedeBadge.textContent = `${live} transmitiendo`;
+      elSedeBadge.style.display = '';
+      elSedeBadge.style.background = 'rgba(63,191,107,.15)';
+      elSedeBadge.style.color = '#1e7a3d';
+    } else {
+      elSedeBadge.style.display = 'none';
+    }
+  }
+
+  function startPolling() {
+    pollStatus();
+    setInterval(pollStatus, POLL_INTERVAL);
+  }
+
+  // ========= Init =========
+  setupUI();
+  fetchConfig();
+
+})();
+</script>
+
+<script src="/operador/_shared/logout.js"></script>
+
+</body>
+</html>

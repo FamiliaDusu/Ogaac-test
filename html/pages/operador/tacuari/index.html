@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>OGAAC · Operador · Tacuari</title>
+  <script>
+    fetch('/operador/sede-detalle.html')
+      .then(r => r.text())
+      .then(html => {
+        document.open();
+        document.write(html);
+        document.close();
+      })
+      .catch(() => location.href = '/operador/sedes.html');
+  </script>
+</head>
+<body>Cargando...</body>
+</html>

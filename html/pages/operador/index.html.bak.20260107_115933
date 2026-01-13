@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OGAAC · Operador</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 0; background:#f6f6f7; color:#111; }
+    header { padding: 14px 16px; background:#111; color:#fff; position: sticky; top:0; }
+    header .sub { opacity:.8; font-size: 12px; margin-top: 4px; }
+    .wrap { padding: 14px 16px; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+    .card { background:#fff; border:1px solid #e5e5e5; border-radius: 12px; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .card.card-disabled { opacity:.55; border-color:#d4d4d4; background:#f9f9f9; }
+    .card.card-disabled .title { color:#555; }
+    .card.card-disabled .muted { color:#888; }
+    .top { display:flex; align-items:center; justify-content:space-between; gap: 8px; }
+    .title { font-weight: 700; }
+    .muted { color:#666; font-size: 12px; }
+    .badges { margin-top: 10px; display:flex; flex-wrap: wrap; gap: 6px; }
+    .badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid #ccc; background:#f2f2f2; }
+    .ok { background:#e7f7ed; border-color:#7ad39a; }
+    .warn { background:#fff6e5; border-color:#f0c36d; }
+    .err { background:#fde8e8; border-color:#f19a9a; }
+    .badge.disabled { background:#e5e7eb; border-color:#c3c7d1; color:#4f5a67; }
+    .row { margin-top: 8px; font-size: 12px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .toolbar { display:flex; gap:8px; margin: 10px 0 14px; flex-wrap: wrap; }
+    button { cursor:pointer; border:1px solid #ddd; background:#fff; border-radius:10px; padding:8px 10px; }
+    input { border:1px solid #ddd; border-radius:10px; padding:8px 10px; min-width: 240px; }
+    .toggle { display:flex; align-items:center; gap:6px; border:1px solid #ddd; border-radius:999px; padding:6px 12px; font-size:12px; background:#fff; font-weight:600; }
+    .toggle input { margin:0; accent-color:#111; }
+    .toggle span { white-space:nowrap; }
+    .warning-trigger { display:inline-flex; align-items:center; gap:6px; border:1px solid #f0c36d; background:#fff6e1; color:#7c4a00; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.1); }
+    .warning-trigger:hover { background:#fdeccc; }
+    .warning-trigger:focus-visible { outline:2px solid #f0c36d; outline-offset:2px; }
+    .config-row { margin-top:6px; color:#333; font-size:11px; }
+    .warning-badges { margin-top:6px; }
+    .card-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .card-actions button { flex:1; min-width:140px; }
+    body.modal-open { overflow:hidden; }
+    .warnings-shell { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.45); z-index:999; }
+    .warnings-shell[hidden] { display:none; }
+    .warnings-modal { width:min(640px, calc(100% - 32px)); max-height:calc(100vh - 80px); background:#fff; border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,.25); display:flex; flex-direction:column; }
+    .warnings-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:18px 22px; border-bottom:1px solid #eee; }
+    .warnings-title { font-size:16px; font-weight:700; }
+    .warnings-subtitle { font-size:13px; color:#555; margin-top:4px; }
+    .warning-counters { font-size:12px; color:#777; margin-top:2px; }
+    .warnings-close { border:none; background:transparent; font-size:20px; line-height:1; cursor:pointer; color:#555; }
+    .warnings-body { padding:16px 22px 24px; overflow:auto; display:flex; flex-direction:column; gap:12px; }
+    .warning-item { border:1px solid #f0d79c; border-radius:12px; background:#fff9ed; padding:12px; display:flex; flex-direction:column; gap:6px; }
+    .warning-item-head { display:flex; align-items:center; gap:8px; font-size:13px; }
+    .warning-pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:999px; background:#fff3d4; border:1px solid #f0c36d; font-size:12px; font-weight:600; color:#7c4a00; }
+    .warning-meta { font-size:12px; color:#865704; }
+    .warning-message { font-size:13px; color:#423000; }
+    .warning-ids { font-size:12px; color:#6b4b0c; }
+    .warning-empty { font-size:13px; color:#555; }
+  </style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+    <div>
+      <div style="font-size:16px;font-weight:800;">OGAAC · Modo Operador</div>
+      <div class="sub" id="hdr-sub">Cargando…</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="warnings-pill" class="warning-trigger" hidden>⚠️ Advertencias</button>
+      <div class="muted mono" id="hdr-health"></div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="toolbar">
+    <button id="btn-refresh">Refrescar lista</button>
+    <button id="btn-pause">Pausar polling</button>
+    <input id="filter" placeholder="Filtrar (ej: suipacha, sala10, libertad...)" />
+    <label class="toggle">
+      <input type="checkbox" id="toggle-force-poll" />
+      <span>Modo test: forzar polling en deshabilitadas</span>
+    </label>
+    <label class="toggle">
+      <input type="checkbox" id="toggle-show-disabled" checked />
+      <span>Mostrar deshabilitadas</span>
+    </label>
+  </div>
+  <div id="grid" class="grid"></div>
+</div>
+
+<div id="warnings-shell" class="warnings-shell" hidden>
+  <div class="warnings-modal" role="dialog" aria-labelledby="warnings-title" aria-modal="true">
+    <div class="warnings-header">
+      <div>
+        <div class="warnings-title" id="warnings-title">Advertencias de configuración</div>
+        <div class="warnings-subtitle" id="warnings-subtitle">Sin advertencias activas</div>
+        <div class="warning-counters" id="warnings-counters"></div>
+      </div>
+      <button class="warnings-close" id="warnings-close" aria-label="Cerrar">×</button>
+    </div>
+    <div class="warnings-body" id="warnings-list">
+      <div class="warning-empty">Sin advertencias activas.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const POLL_MS = 5000;
+  const NEED_AUTH_STATUS = new Set([401, 403]);
+  const STORAGE_KEYS = {
+    forcePoll: "ogaac_test_force_poll_disabled",
+    showDisabled: "ogaac_test_show_disabled",
+  };
+
+  let paused = false;
+  let allSalas = [];
+  let lastRenderedCount = 0;
+  const warningsState = { list: [], counts: {} };
+  let warningsModalOpen = false;
+  const uiPrefs = {
+    forcePollDisabled: readBoolPref(STORAGE_KEYS.forcePoll, false),
+    showDisabled: readBoolPref(STORAGE_KEYS.showDisabled, true),
+  };
+
+  const timers = new Map();      // key -> interval id
+  const pendingPolls = new Set();// key -> in-flight
+  let sessionPromise = null;
+
+  function makeKey(sede, sala) { return `${sede}|${sala}`; }
+
+  async function fetchJson(url, options = {}, { retryAuth = true } = {}) {
+    const finalOptions = { credentials: "include", ...options };
+
+    let response;
+    try {
+      response = await fetch(url, finalOptions);
+    } catch (networkError) {
+      const err = new Error(networkError?.message || "Error de red");
+      err.status = 0;
+      throw err;
+    }
+
+    let text = "";
+    try { text = await response.text(); } catch (_) { text = ""; }
+
+    let data = {};
+    if (text) {
+      try { data = JSON.parse(text); } catch (_) { data = {}; }
+    }
+
+    const isAppError = (data && typeof data === "object" && data.ok === false);
+    if (!response.ok || isAppError) {
+      const err = new Error(data.message || data.error || data.msg || `HTTP ${response.status}`);
+      err.status = response.status;
+      err.statusText = response.statusText;
+      err.traceId = data.traceId;
+      err.code = data.code || data.error;
+      err.data = data;
+
+      if (retryAuth && NEED_AUTH_STATUS.has(response.status)) {
+        await requireSession();
+        return fetchJson(url, options, { retryAuth: false });
+      }
+      throw err;
+    }
+
+    return data;
+  }
+
+  async function requireSession() {
+    if (sessionPromise) return sessionPromise;
+
+    sessionPromise = (async () => {
+      if (await hasValidSession()) return true;
+      await interactiveLogin();
+      return true;
+    })().finally(() => { sessionPromise = null; });
+
+    return sessionPromise;
+  }
+
+  async function hasValidSession() {
+    try {
+      await fetchJson("/api/check", { method: "GET" }, { retryAuth: false });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function interactiveLogin() {
+    const username = prompt("Usuario OGAAC:");
+    if (!username) throw new Error("Login cancelado");
+
+    const password = prompt(`Contraseña para ${username}:`);
+    if (!password) throw new Error("Login cancelado");
+
+    const payload = { username, password, user: username, pass: password };
+
+    try {
+      await fetchJson("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }, { retryAuth: false });
+    } catch (err) {
+      alert(err.message || "Login falló");
+      throw err;
+    }
+  }
+
+  function badge(text, cls = "") {
+    const el = document.createElement("span");
+    el.className = cls ? `badge ${cls}` : "badge";
+    el.textContent = text;
+    return el;
+  }
+
+  function mkCard(sede, sala, label) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.dataset.sede = sede;
+    card.dataset.sala = sala;
+
+    const top = document.createElement("div");
+    top.className = "top";
+
+    const left = document.createElement("div");
+
+    const t = document.createElement("div");
+    t.className = "title";
+    t.textContent = (label ? `${label} · ` : "") + `${sede} / ${sala}`;
+
+    const sub = document.createElement("div");
+    sub.className = "muted mono";
+    sub.textContent = `/api/obs/${sede}/${sala}/summary`;
+
+    left.appendChild(t);
+    left.appendChild(sub);
+
+    const right = document.createElement("div");
+    right.className = "muted mono";
+    right.textContent = "…";
+
+    top.appendChild(left);
+    top.appendChild(right);
+
+    const badges = document.createElement("div");
+    badges.className = "badges";
+
+    const configRow = document.createElement("div");
+    configRow.className = "row mono config-row";
+
+    const warningBadges = document.createElement("div");
+    warningBadges.className = "badges warning-badges";
+
+    const row1 = document.createElement("div");
+    row1.className = "row mono";
+
+    const row2 = document.createElement("div");
+    row2.className = "row mono";
+
+    card.appendChild(top);
+    card.appendChild(badges);
+    card.appendChild(configRow);
+    card.appendChild(warningBadges);
+    card.appendChild(row1);
+    card.appendChild(row2);
+
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+    card.appendChild(actions);
+
+    return { card, topRight: right, badges, row1, row2, subline: sub, configRow, warningBadges, actions };
+  }
+
+  function renderDisabledCard(ui, cfg = {}) {
+    if (!ui || !ui.card) return;
+    ui.card.classList.add("card-disabled");
+    ui.topRight.textContent = "Polling inactivo";
+    if (ui.subline) ui.subline.textContent = cfg.ws || "Sin endpoint OBS configurado";
+    ui.badges.innerHTML = "";
+    ui.badges.appendChild(badge("Polling deshabilitado", "disabled"));
+    ui.row1.textContent = "Habilitar modo test para forzar polling.";
+    ui.row2.textContent = cfg.ws ? `ws=${cfg.ws}` : "";
+  }
+
+  function createPlaceholderCard(title, rows = []) {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const t = document.createElement("div");
+    t.className = "title";
+    t.textContent = title;
+    card.appendChild(t);
+
+    rows.forEach((text) => {
+      const row = document.createElement("div");
+      row.className = "row mono";
+      row.textContent = text;
+      card.appendChild(row);
+    });
+
+    return card;
+  }
+
+  function updateHeaderCounts(shown) {
+    lastRenderedCount = shown;
+    const hdr = document.getElementById("hdr-sub");
+    const pauseNote = paused ? " · PAUSADO" : "";
+    hdr.textContent = `Total: ${allSalas.length} · Mostradas: ${shown} · Poll: ${POLL_MS / 1000}s${pauseNote}`;
+  }
+
+  function showGridError(err) {
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+
+    const rows = [
+      (err.status ? `status=${err.status}` : null),
+      (err.code ? `code=${err.code}` : null),
+      (err.traceId ? `traceId=${err.traceId}` : null),
+      (err.message ? `msg=${err.message}` : "Error desconocido"),
+    ].filter(Boolean);
+
+    grid.appendChild(createPlaceholderCard("No se pudo cargar la configuración", rows));
+    updateHeaderCounts(0);
+  }
+
+  function renderList(list) {
+    const grid = document.getElementById("grid");
+    grid.innerHTML = "";
+
+    timers.forEach((id) => clearInterval(id));
+    timers.clear();
+    pendingPolls.clear();
+
+    if (!list.length) {
+      const hasFilter = (document.getElementById("filter").value || "").trim().length > 0;
+      const msg = hasFilter ? "Sin salas que coincidan con el filtro" : "Sin salas configuradas";
+      grid.appendChild(createPlaceholderCard(msg));
+      updateHeaderCounts(0);
+      return;
+    }
+
+    list.forEach((item) => {
+      const { sede, sala, label, enabled = true } = item;
+      const ui = mkCard(sede, sala, label);
+      grid.appendChild(ui.card);
+      decorateCardConfig(ui, item);
+      setupCardActions(ui, item);
+      const allowPolling = shouldPollRoom(item);
+      if (!allowPolling) {
+        renderDisabledCard(ui, item);
+        return;
+      }
+      if (enabled === false) ui.card.classList.add("card-disabled");
+      const key = makeKey(sede, sala);
+
+      const tick = async () => {
+        if (paused || pendingPolls.has(key)) return;
+        pendingPolls.add(key);
+
+        try {
+          const data = await fetchJson(`/api/obs/${encodeURIComponent(sede)}/${encodeURIComponent(sala)}/summary`);
+          ui.topRight.textContent = data.traceId || "";
+
+          ui.badges.innerHTML = "";
+          const streamOn = !!data.stream?.outputActive;
+          const recOn = !!data.record?.outputActive;
+          const op = data.state?.state || "unknown";
+
+          ui.badges.appendChild(badge(`STREAM: ${streamOn ? "ON" : "OFF"}`, streamOn ? "ok" : ""));
+          ui.badges.appendChild(badge(`RECORD: ${recOn ? "ON" : "OFF"}`, recOn ? "warn" : ""));
+          ui.badges.appendChild(badge(`OP: ${op}`, op === "error" ? "err" : (op === "recording" ? "warn" : "ok")));
+
+          const lastOut = data.state?.lastOutputPath;
+          const lastErr = data.state?.lastError;
+          ui.row1.textContent = lastOut ? `lastOutputPath=${lastOut}` : "";
+          ui.row2.textContent = lastErr ? `lastError=${lastErr}` : "";
+        } catch (err) {
+          const statusLabel = err.status ? `HTTP ${err.status}` : "ERROR";
+          ui.topRight.textContent = err.traceId ? `traceId=${err.traceId}` : statusLabel;
+
+          ui.badges.innerHTML = "";
+          ui.badges.appendChild(badge(statusLabel, "err"));
+          if (err.traceId) ui.badges.appendChild(badge(`traceId=${err.traceId}`, "err"));
+          if (err.code) ui.badges.appendChild(badge(`code=${err.code}`, "err"));
+
+          ui.row1.textContent = err.message ? `msg=${err.message}` : "";
+          ui.row2.textContent = err.statusText ? err.statusText : "";
+        } finally {
+          pendingPolls.delete(key);
+        }
+      };
+
+      tick();
+      timers.set(key, setInterval(tick, POLL_MS));
+    });
+
+    updateHeaderCounts(list.length);
+  }
+
+  function decorateCardConfig(ui, cfg = {}) {
+    if (!ui) return;
+    const enabled = cfg.enabled !== false;
+    const detail = [];
+    detail.push(`enabled=${enabled}`);
+    if (typeof cfg.needsSecrets === "boolean") detail.push(`needsSecrets=${cfg.needsSecrets}`);
+    if (cfg.ws) detail.push(`ws=${cfg.ws}`);
+    if (ui.configRow) ui.configRow.textContent = detail.join(" · ");
+    if (ui.warningBadges) {
+      ui.warningBadges.innerHTML = "";
+      if (!enabled) {
+        ui.warningBadges.appendChild(badge("DESHABILITADA", "disabled"));
+      }
+      if (cfg.needsSecrets) {
+        ui.warningBadges.appendChild(badge("needsSecrets", "warn"));
+      }
+      const warnings = Array.isArray(cfg.warnings) ? cfg.warnings : [];
+      warnings.forEach((warn) => {
+        const label = formatWarningLabel(warn);
+        const warnBadge = badge(label, "warn");
+        if (warn && typeof warn === "object") {
+          const msg = warn.message || warn.detail;
+          if (msg) warnBadge.title = msg;
+        }
+        ui.warningBadges.appendChild(warnBadge);
+      });
+    }
+    if (ui.subline) {
+      if (cfg.ws) ui.subline.textContent = cfg.ws;
+      else if (cfg.sede && cfg.sala) ui.subline.textContent = `/api/obs/${cfg.sede}/${cfg.sala}/summary`;
+    }
+  }
+
+  function formatWarningLabel(warn) {
+    if (!warn) return "warning";
+    if (typeof warn === "string") return warn;
+    if (warn.code) return warn.code;
+    if (warn.id) return String(warn.id);
+    return warn.message ? warn.message.slice(0, 36) : "warning";
+  }
+
+  function shouldPollRoom(item = {}) {
+    return item.enabled !== false || uiPrefs.forcePollDisabled;
+  }
+
+  function setupCardActions(ui, item) {
+    if (!ui || !ui.actions) return;
+    ui.actions.innerHTML = "";
+
+    const controlBtn = document.createElement("button");
+    controlBtn.textContent = "Abrir Control (Sala)";
+    controlBtn.addEventListener("click", () => openControlPanel(item));
+    ui.actions.appendChild(controlBtn);
+
+    const wsBtn = document.createElement("button");
+    wsBtn.textContent = "Abrir WebSocket OBS";
+    wsBtn.addEventListener("click", () => openWebSocketObs(item));
+    ui.actions.appendChild(wsBtn);
+  }
+
+  function buildControlUrl(item = {}) {
+    const sede = encodeURIComponent(item.sede || "");
+    const sala = encodeURIComponent(item.sala || "");
+    // Corregido: apuntar a /operador/ (no /pages/operador/)
+    return `/operador/${sede}/${sala}/index.html`;
+  }
+
+  async function openControlPanel(item) {
+    const target = buildControlUrl(item);
+    // Navegación directa sin popup about:blank
+    try {
+      const res = await fetch(target, { method: "HEAD", credentials: "include", cache: "no-cache" });
+      if (res.ok) {
+        window.location.href = target;
+        return;
+      }
+      throw new Error("not-found");
+    } catch (err) {
+      alert("No existe UI para esta sala. Verificar que existe: " + target);
+    }
+  }
+
+  function openWebSocketObs(item) {
+    const sede = encodeURIComponent(item.sede || "");
+    const sala = encodeURIComponent(item.sala || "");
+    const url = `/web-socket-obs/?sede=${sede}&sala=${sala}`;
+    window.open(url, "_blank", "noopener");
+  }
+
+  // Config warnings badge + modal
+  function updateWarningsUi(warnings = [], counts = {}) {
+    warningsState.list = Array.isArray(warnings) ? warnings : [];
+    warningsState.counts = counts && typeof counts === "object" ? counts : {};
+
+    const btn = document.getElementById("warnings-pill");
+    const total = warningsState.list.length;
+    if (btn) {
+      btn.hidden = total === 0;
+      if (total) {
+        const label = total === 1 ? "advertencia" : "advertencias";
+        btn.textContent = `⚠️ ${total} ${label}`;
+        btn.setAttribute("aria-label", `Hay ${total} ${label} de configuración`);
+      } else {
+        btn.textContent = "⚠️ Advertencias";
+        btn.removeAttribute("aria-label");
+        if (warningsModalOpen) closeWarningsModal();
+      }
+    }
+
+    const subtitle = document.getElementById("warnings-subtitle");
+    if (subtitle) {
+      subtitle.textContent = total
+        ? `${total} advertencia${total === 1 ? "" : "s"} activa${total === 1 ? "" : "s"}`
+        : "Sin advertencias activas";
+    }
+
+    const countersEl = document.getElementById("warnings-counters");
+    if (countersEl) {
+      const summary = formatWarningCounters(warningsState.counts);
+      countersEl.textContent = summary || "";
+    }
+
+    renderWarningsModal();
+  }
+
+  function renderWarningsModal() {
+    const listEl = document.getElementById("warnings-list");
+    if (!listEl) return;
+
+    listEl.innerHTML = "";
+    if (!warningsState.list.length) {
+      const empty = document.createElement("div");
+      empty.className = "warning-empty";
+      empty.textContent = "Sin advertencias activas.";
+      listEl.appendChild(empty);
+      return;
+    }
+
+    warningsState.list.forEach((warn) => {
+      const item = document.createElement("div");
+      item.className = "warning-item";
+
+      const head = document.createElement("div");
+      head.className = "warning-item-head";
+
+      const codePill = document.createElement("span");
+      codePill.className = "warning-pill";
+      codePill.textContent = warn.code || "warning";
+      head.appendChild(codePill);
+
+      const metaText = buildWarningMeta(warn);
+      if (metaText) {
+        const meta = document.createElement("span");
+        meta.className = "warning-meta";
+        meta.textContent = metaText;
+        head.appendChild(meta);
+      }
+
+      item.appendChild(head);
+
+      const msg = document.createElement("div");
+      msg.className = "warning-message";
+      msg.textContent = warn.message || "Sin detalles";
+      item.appendChild(msg);
+
+      if (Array.isArray(warn.ids) && warn.ids.length > 1) {
+        const ids = document.createElement("div");
+        ids.className = "warning-ids";
+        ids.textContent = "IDs: " + warn.ids.join(", ");
+        item.appendChild(ids);
+      }
+
+      listEl.appendChild(item);
+    });
+  }
+
+  function buildWarningMeta(warn) {
+    if (!warn || typeof warn !== "object") return "";
+    const segments = [];
+    if (warn.id) segments.push(String(warn.id));
+    if (warn.value) segments.push(String(warn.value));
+    if (Array.isArray(warn.ids) && warn.ids.length === 1) segments.push(String(warn.ids[0]));
+    return segments.join(" · ");
+  }
+
+  function formatWarningCounters(counts) {
+    if (!counts || typeof counts !== "object") return "";
+    const mapping = [
+      ["missingSecrets", "sin secretos"],
+      ["duplicateObsWs", "OBS duplicado"],
+      ["duplicateRtsp", "RTSP duplicado"],
+    ];
+    const parts = [];
+    mapping.forEach(([key, label]) => {
+      const value = counts[key];
+      if (typeof value === "number" && value > 0) {
+        parts.push(`${label}: ${value}`);
+      }
+    });
+    return parts.join(" · ");
+  }
+
+  function openWarningsModal() {
+    if (!warningsState.list.length) return;
+    const shell = document.getElementById("warnings-shell");
+    if (!shell) return;
+    renderWarningsModal();
+    shell.hidden = false;
+    shell.classList.add("open");
+    document.body.classList.add("modal-open");
+    warningsModalOpen = true;
+  }
+
+  function closeWarningsModal() {
+    const shell = document.getElementById("warnings-shell");
+    if (!shell || shell.hidden) {
+      warningsModalOpen = false;
+      document.body.classList.remove("modal-open");
+      return;
+    }
+    shell.classList.remove("open");
+    shell.hidden = true;
+    document.body.classList.remove("modal-open");
+    warningsModalOpen = false;
+  }
+
+  async function loadConfig() {
+    const hdr = document.getElementById("hdr-sub");
+    hdr.textContent = "Actualizando lista…";
+
+    try {
+      const data = await fetchJson("/api/obs/config");
+      allSalas = Array.isArray(data.salas) ? data.salas : [];
+      updateWarningsUi(data.warnings || [], data.counts || {});
+      applyFilter();
+    } catch (err) {
+      console.error("[operador] No pude cargar /api/obs/config", err);
+      showGridError(err);
+      throw err;
+    }
+  }
+
+  function applyFilter() {
+    const q = (document.getElementById("filter").value || "").toLowerCase().trim();
+    let filtered = !q ? allSalas : allSalas.filter((x) =>
+      (x.sede || "").toLowerCase().includes(q) ||
+      (x.sala || "").toLowerCase().includes(q) ||
+      String(x.label || "").toLowerCase().includes(q)
+    );
+    if (!uiPrefs.showDisabled) {
+      filtered = filtered.filter((x) => x.enabled !== false);
+    }
+    renderList(filtered);
+  }
+
+  async function loadHealth() {
+    try {
+      const h = await fetchJson("/health", {}, { retryAuth: false });
+      document.getElementById("hdr-health").textContent =
+        `rev=${h.gitRev || "-"} · up=${h.uptimeSec || 0}s · obsPool=${h.obsPoolSize} · recOps=${h.recordOpsSize}`;
+    } catch {
+      document.getElementById("hdr-health").textContent = "";
+    }
+  }
+
+  document.getElementById("btn-refresh").addEventListener("click", () => { loadConfig().catch(() => {}); });
+
+  document.getElementById("btn-pause").addEventListener("click", (e) => {
+    paused = !paused;
+    e.target.textContent = paused ? "Reanudar polling" : "Pausar polling";
+    updateHeaderCounts(lastRenderedCount);
+  });
+
+  document.getElementById("filter").addEventListener("input", applyFilter);
+
+  const toggleForce = document.getElementById("toggle-force-poll");
+  if (toggleForce) {
+    toggleForce.checked = uiPrefs.forcePollDisabled;
+    toggleForce.addEventListener("change", (event) => {
+      uiPrefs.forcePollDisabled = event.target.checked;
+      writeBoolPref(STORAGE_KEYS.forcePoll, uiPrefs.forcePollDisabled);
+      applyFilter();
+    });
+  }
+
+  const toggleShowDisabled = document.getElementById("toggle-show-disabled");
+  if (toggleShowDisabled) {
+    toggleShowDisabled.checked = uiPrefs.showDisabled;
+    toggleShowDisabled.addEventListener("change", (event) => {
+      uiPrefs.showDisabled = event.target.checked;
+      writeBoolPref(STORAGE_KEYS.showDisabled, uiPrefs.showDisabled);
+      applyFilter();
+    });
+  }
+
+  const warningsButton = document.getElementById("warnings-pill");
+  if (warningsButton) {
+    warningsButton.addEventListener("click", openWarningsModal);
+  }
+
+  const warningsClose = document.getElementById("warnings-close");
+  if (warningsClose) {
+    warningsClose.addEventListener("click", closeWarningsModal);
+  }
+
+  const warningsShell = document.getElementById("warnings-shell");
+  if (warningsShell) {
+    warningsShell.addEventListener("click", (event) => {
+      if (event.target === warningsShell) closeWarningsModal();
+    });
+  }
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && warningsModalOpen) {
+      closeWarningsModal();
+    }
+  });
+
+  function readBoolPref(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw === null) return fallback;
+      return raw === "true";
+    } catch (err) {
+      console.warn("[operador] No pude leer localStorage", err);
+      return fallback;
+    }
+  }
+
+  function writeBoolPref(key, value) {
+    try {
+      localStorage.setItem(key, value ? "true" : "false");
+    } catch (err) {
+      console.warn("[operador] No pude persistir localStorage", err);
+    }
+  }
+
+  (async function init() {
+    await requireSession().catch((err) => { console.warn("[operador] Sesión no iniciada aún", err); });
+    await loadHealth();
+    await loadConfig().catch(() => {});
+    setInterval(loadHealth, 5000);
+  })();
+</script>
+</body>
+</html>

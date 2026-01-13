@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>OGAAC · Acceso al portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- ✅ CSS global institucional -->
+  <link rel="stylesheet" href="ogaac.css" />
+</head>
+
+<body class="page login-page">
+  <main class="login-card card">
+    <h1 class="card-title" style="text-align:center;">
+      OGAAC · Portal interno
+    </h1>
+    <p class="card-subtitle" style="text-align:center; margin-bottom:18px;">
+      Acceso restringido · Consejo de la Magistratura
+    </p>
+
+    <!-- ⚠️ Mensaje de error (lo muestra auth.js si falla el login) -->
+    <div id="error" class="login-error" style="display:none;">
+      Usuario o contraseña incorrectos
+    </div>
+
+    <!-- ✅ OJO: IDs respetados para que funcione tu js/auth.js -->
+    <form id="login-form">
+      <div class="form-field">
+        <label for="user">Usuario</label>
+        <input
+          id="user"
+          type="text"
+          autocomplete="username"
+          required
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="pass">Contraseña</label>
+        <input
+          id="pass"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+      </div>
+
+      <button class="btn btn-block mt-16" type="submit" id="login-button">
+        Ingresar
+      </button>
+    </form>
+
+    <p class="card-subtitle" style="font-size:11px; margin-top:14px; text-align:center;">
+      Uso exclusivo interno · OGAAC / Consejo de la Magistratura
+    </p>
+  </main>
+
+  <!-- ✅ Cache-buster para forzar recarga -->
+  <script src="js/auth.js?v=20260107-FIX"></script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+/* ======================================================
+   OGAAC · Estilos específicos para páginas de streaming
+   Archivo: sala-stream.css
+   ====================================================== */
+
+/* Layout general de la página de sala */
+.stream-page .page-main {
+  padding: 24px 16px;
+}
+
+@media (min-width: 768px) {
+  .stream-page .page-main {
+    padding: 32px 48px;
+  }
+}
+
+.stream-page .content-inner {
+  max-width: 1100px;
+}
+
+/* Card especial para streaming (no usa flex como .card global) */
+.card-stream {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 16px 18px;
+
+  /* 🔥 anulamos comportamiento flex de .card global */
+  display: block;
+  min-height: auto;
+  overflow: hidden;
+}
+
+/* Encabezado dentro de la card de streaming */
+.card-stream .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Estado "En vivo / Sin señal" */
+.status-tag {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  white-space: nowrap;
+  background: var(--chip-bg);
+}
+
+.status-ok {
+  border-color: var(--status-ok);
+  color: var(--status-ok);
+}
+
+.status-error {
+  border-color: var(--status-off);
+  color: var(--status-off);
+}
+
+/* 🎥 Contenedor del video: MISMO patrón que Sala 10 */
+.card-stream .video-wrapper {
+  margin-top: 10px;
+  position: relative;
+  padding-top: 56.25%;       /* 16:9 fijo, no se deforma */
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;          /* el video NO puede salir de acá */
+}
+
+/* El video ocupa todo el wrapper, igual que en sala10.html */
+.card-stream .video-wrapper video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  outline: none;
+}
+
+/* Texto de estado bajo el video */
+#status {
+  margin-top: 8px;
+  margin-bottom: 0;
+  padding-bottom: 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+/* ======================================================
+   Streaming: la .card del portal es flex (sirve para grillas),
+   pero para video hay que anularlo.
+   ====================================================== */
+
+.card-stream{
+  display: block !important;
+  min-height: auto !important;
+  padding: 16px 18px !important;
+  border-radius: 12px;
+  overflow: hidden; /* recorta cualquier cosa */
+}
+
+/* Evitar hover “tarjeta interactiva” en streaming */
+.card-stream:hover{
+  transform: none !important;
+  border-color: var(--border-soft) !important;
+}
+
+/* Wrapper idéntico al HTML que te funciona */
+.card-stream .video-wrapper{
+  margin-top: 10px;
+  position: relative;
+  padding-top: 56.25%; /* 16:9 */
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.card-stream .video-wrapper video{
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  outline: none;
+}
+/* ======================================================
+   FIX DEFINITIVO STREAMING – anula card FLEX de ogaac.css
+   ====================================================== */
+
+body.stream-page .card {
+  display: block !important;
+  flex: none !important;
+  min-height: 0 !important;
+  height: auto !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+}
+
+/* Evitar efecto hover de tarjetas del portal */
+body.stream-page .card:hover {
+  transform: none !important;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08) !important;
+}
+
+/* Wrapper EXACTO (idéntico a Sala 10) */
+body.stream-page .video-wrapper {
+  position: relative !important;
+  width: 100%;
+  padding-top: 56.25%;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Video contenido SIEMPRE */
+body.stream-page .video-wrapper > video {
+  position: absolute !important;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+/* =========================
+   Layout centrado (streaming)
+   ========================= */
+
+.stream-page .page-main{
+  display: flex;
+  justify-content: center;  /* centra horizontal */
+}
+
+.stream-page .content-inner{
+  width: 100%;
+  max-width: 1100px;        /* estética: no muy ancho */
+  margin: 0 auto;
+}
+
+/* Títulos arriba, alineados prolijos */
+.stream-page .page-subheader,
+.stream-page .section-title{
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Card del streaming centrada */
+.stream-page .card{
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;          /* centra la card */
+}
+
+/* Un poco más de aire en escritorio grande */
+@media (min-width: 1200px){
+  .stream-page .page-main{
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+.stream-page .video-wrapper{
+  border-radius: 12px;
+}
+
+.stream-page .card{
+  box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+}

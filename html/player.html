@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reproductor de Audiencias</title>
+  <style>
+    body {
+      background: #0b0b0b;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    #info {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 10px;
+      color: #ccc;
+      word-break: break-all;
+    }
+    #status {
+      text-align: center;
+      font-size: 13px;
+      margin-bottom: 15px;
+      color: #f0c674;
+    }
+    video {
+      width: 100%;
+      max-width: 1200px;
+      display: block;
+      margin: 0 auto;
+      background: #000;
+    }
+    a {
+      color: #0b7dda;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Reproductor de Audiencias</h1>
+<div id="info"></div>
+<div id="status"></div>
+<video id="player" controls autoplay muted preload="metadata"></video>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const file = params.get("file");
+
+  const info = document.getElementById("info");
+  const status = document.getElementById("status");
+  const video = document.getElementById("player");
+
+  if (!file) {
+    info.textContent = "No se indicó ningún archivo de audiencia.";
+  } else {
+    // Usamos la ruta tal cual viene en la URL
+    info.textContent = "Archivo: " + file;
+    video.src = file;
+
+    status.textContent = "Cargando video...";
+
+    video.addEventListener("loadedmetadata", () => {
+      status.textContent = "Duración: " + video.duration.toFixed(1) + " segundos. Si no inicia solo, tocá PLAY.";
+    });
+
+    video.addEventListener("error", () => {
+      status.textContent = "Error al cargar el video. Verificar ruta/formato.";
+    });
+
+    video.play().catch(() => {
+      status.textContent = "El navegador bloqueó la reproducción automática. Tocá PLAY para iniciar.";
+    });
+  }
+</script>
+
+</body>
+</html>

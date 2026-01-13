@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>OGAAC · Control OBS · Sala 10</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<link rel="stylesheet" href="/web-socket-obs/css-socket-obs/obs-base.css">
+
+</head>
+
+<body>
+<h1>🎛️ OGAAC · Control OBS · Sala 10 (Suipacha)</h1>
+
+<div class="grid">
+
+  <!-- Columna izquierda: Stream/Record/Replay/Screenshot/Stats -->
+  <div class="card">
+    <h3>Estado general</h3>
+    <div class="row">
+      <span class="muted">Stream:</span>
+      <span id="streamStatus" class="status off">–</span>
+
+      <button class="blue" onclick="startStream()">Iniciar transmisión</button>
+      <button class="red" onclick="stopStream()">Detener transmisión</button>
+
+      <button class="gray" onclick="refreshAll()">Actualizar</button>
+      <span id="authStatus" class="pill">auth: ?</span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <h3>Grabación</h3>
+    <div class="row">
+      <button onclick="startRecord()">Grabar</button>
+      <button class="gray" onclick="pauseRecord()">Pausar</button>
+      <button class="gray" onclick="resumeRecord()">Reanudar</button>
+      <button class="red" onclick="stopRecord()">Detener</button>
+      <span id="recStatus" class="pill">rec: ?</span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <h3>Replay Buffer</h3>
+    <div class="row">
+      <button onclick="startReplay()">Start</button>
+      <button class="gray" onclick="saveReplay()">Guardar clip</button>
+      <button class="red" onclick="stopReplay()">Stop</button>
+      <span id="replayStatus" class="pill">replay: ?</span>
+    </div>
+    <div class="muted">Nota: si OBS no tiene Replay Buffer habilitado, estas acciones van a fallar (esperado).</div>
+
+    <div class="spacer"></div>
+
+    <h3>Screenshot (evidencia)</h3>
+    <div class="row">
+      <button onclick="takeScreenshot()">Capturar</button>
+      <span id="shotInfo" class="muted">–</span>
+    </div>
+    <div id="shotResult"></div>
+
+    <div class="spacer"></div>
+
+    <h3>Stats</h3>
+    <div id="stats" class="kv"></div>
+
+    <div class="spacer"></div>
+    <div class="muted">Backend: <code>/api/...</code> vía cookie (credentials include). Panel pensado para operador.</div>
+  </div>
+
+  <!-- Columna derecha: Escenas/Overlays + Audio -->
+  <div class="card">
+    <h3>Escenas</h3>
+    <div class="row">
+      <select id="sceneSelect"></select>
+      <button onclick="setScene()">Cambiar</button>
+      <span id="sceneNow" class="pill">–</span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <h3>Overlays / Capas (Scene Items)</h3>
+    <div class="muted">
+      Se muestran los items de la escena seleccionada. Podés prender/apagar cada capa.
+      Recomendación: nombrar overlays con prefijo <code>OV_</code> (ej: OV_EN_VIVO, OV_PLACA, OV_MIC).
+    </div>
+    <div id="itemsList" class="list"></div>
+
+    <div class="spacer"></div>
+
+    <h3>Audio (Mute / Volumen)</h3>
+    <div class="row">
+      <select id="audioInputSelect"></select>
+      <button class="gray" onclick="toggleMute()">Mute / Unmute</button>
+      <span id="muteState" class="pill">mute: ?</span>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="row">
+      <span class="muted">Volumen (dB):</span>
+      <input id="volSlider" type="range" min="-60" max="10" value="-10" step="1" />
+      <span id="volLabel" class="pill">-10 dB</span>
+      <button class="gray" onclick="applyVolume()">Aplicar</button>
+    </div>
+    <div class="muted">
+      Tip: en OBS el input de mic suele ser “Captura de entrada audio” (como te aparece en inputs).
+    </div>
+  </div>
+
+</div>
+
+<script>
+
+  // ===============================
+  // Multi-sala por querystring
+  // ===============================
+  const qs = new URLSearchParams(location.search);
+  const OGAAC_SEDE = (qs.get("sede") || "").trim();
+  const OGAAC_SALA = (qs.get("sala") || "").trim();
+
+  if (!OGAAC_SEDE || !OGAAC_SALA) {
+    document.addEventListener("DOMContentLoaded", () => {
+      document.body.innerHTML = `
+        <div style="font-family:system-ui;padding:16px">
+          <h2>Faltan parámetros</h2>
+          <p>Usar: <code>?sede=suipacha&sala=sala10</code></p>
+        </div>
+      `;
+    });
+    throw new Error("Faltan sede/sala en querystring");
+  }
+
+  const API_BASE = `/api/obs/${encodeURIComponent(OGAAC_SEDE)}/${encodeURIComponent(OGAAC_SALA)}`;
+
+  // ✅ IMPORTANTE:
+  // Dejamos API relativo para que funcione desde cualquier PC si nginx proxyea /api al backend.
+  // Si hoy estás probando directo en obs1, también funciona.
+  const API = ""; // no poner http://127.0.0.1:8081 en el frontend
+
+  async function api(path, opts = {}) {
+    const res = await fetch(API + path, {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      ...opts
+    });
+
+    // Si te devuelve HTML por error de proxy, lo mostramos entendible
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("application/json")) {
+      const text = await res.text();
+      return { ok: false, error: "Respuesta no JSON", detail: text.slice(0, 200) };
+    }
+    return res.json();
+  }
+
+  function setPill(id, text, cls) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = "pill " + (cls || "");
+  }
+
+  // ------------------ AUTH ------------------
+  async function checkAuth() {
+    const r = await api("/api/check");
+    if (r.ok) setPill("authStatus", "auth: OK (" + r.user + ")", "");
+    else setPill("authStatus", "auth: NO", "");
+  }
+
+  // ------------------ STREAM STATUS ------------------
+  async function refreshStatus() {
+    const r = await api(API_BASE + "/status");
+    if (!r.ok) return;
+
+    const active = !!r.status.outputActive;
+    const el = document.getElementById("streamStatus");
+    el.textContent = active ? "EN VIVO" : "OFF";
+    el.className = "status " + (active ? "ok" : "off");
+  }
+
+  async function startStream() {
+    const r = await api(API_BASE + "/stream/start", { method: "POST" });
+    if (!r.ok) alert("Start stream: " + (r.error || r.message || "error"));
+    await refreshStatus();
+  }
+  async function stopStream() {
+    const r = await api(API_BASE + "/stream/stop", { method: "POST" });
+    if (!r.ok) alert("Stop stream: " + (r.error || r.message || "error"));
+    await refreshStatus();
+  }
+
+  // ------------------ RECORD ------------------
+  async function startRecord() {
+    const r = await api(API_BASE + "/record/start", { method: "POST" });
+    if (!r.ok) alert("Start record: " + (r.error || r.message || "error"));
+    setPill("recStatus", "rec: START", "");
+  }
+  async function stopRecord() {
+    const r = await api(API_BASE + "/record/stop", { method: "POST" });
+    if (!r.ok) alert("Stop record: " + (r.error || r.message || "error"));
+    setPill("recStatus", "rec: STOP", "");
+  }
+  async function pauseRecord() {
+    const r = await api(API_BASE + "/record/pause", { method: "POST" });
+    if (!r.ok) alert("Pause record: " + (r.error || r.message || "error"));
+    setPill("recStatus", "rec: PAUSE", "");
+  }
+  async function resumeRecord() {
+    const r = await api(API_BASE + "/record/resume", { method: "POST" });
+    if (!r.ok) alert("Resume record: " + (r.error || r.message || "error"));
+    setPill("recStatus", "rec: RESUME", "");
+  }
+
+  // ------------------ REPLAY ------------------
+  async function refreshReplayStatus() {
+    const r = await api(API_BASE + "/replay/status");
+    if (r.ok) setPill("replayStatus", "replay: OK", "");
+    else setPill("replayStatus", "replay: OFF/NO", "");
+  }
+  async function startReplay() {
+    const r = await api(API_BASE + "/replay/start", { method: "POST" });
+    if (!r.ok) alert("Replay start (esperado si no está habilitado): " + (r.error || r.message || "error"));
+    await refreshReplayStatus();
+  }
+  async function stopReplay() {
+    const r = await api(API_BASE + "/replay/stop", { method: "POST" });
+    if (!r.ok) alert("Replay stop: " + (r.error || r.message || "error"));
+    await refreshReplayStatus();
+  }
+  async function saveReplay() {
+    const r = await api(API_BASE + "/replay/save", { method: "POST" });
+    if (!r.ok) alert("Replay save: " + (r.error || r.message || "error"));
+    await refreshReplayStatus();
+  }
+
+  // ------------------ STATS ------------------
+  async function refreshStats() {
+    const r = await api(API_BASE + "/stats");
+    if (!r.ok) return;
+
+    const s = r.stats;
+    const el = document.getElementById("stats");
+    el.innerHTML = `
+      <b>CPU</b><div>${(s.cpuUsage ?? 0).toFixed(2)}%</div>
+      <b>FPS</b><div>${(s.activeFps ?? 0).toFixed(1)}</div>
+      <b>Render</b><div>${s.renderSkippedFrames ?? 0} / ${s.renderTotalFrames ?? 0}</div>
+      <b>Output</b><div>${s.outputSkippedFrames ?? 0} / ${s.outputTotalFrames ?? 0}</div>
+      <b>RAM</b><div>${(s.memoryUsage ?? 0).toFixed(1)} MB</div>
+      <b>Disk</b><div>${(s.availableDiskSpace ?? 0).toFixed(1)} MB</div>
+    `;
+  }
+
+  // ------------------ SCREENSHOT ------------------
+  async function takeScreenshot() {
+    const r = await api(API_BASE + "/screenshot", {
+      method: "POST",
+      body: JSON.stringify({ width: 1280, height: 720 })
+    });
+    if (!r.ok) return alert("Screenshot: " + (r.error || r.message || "error"));
+
+    document.getElementById("shotInfo").textContent = r.fileName || "OK";
+    document.getElementById("shotResult").innerHTML =
+      `<img class="preview" src="${r.url}?t=${Date.now()}" alt="screenshot">`;
+  }
+
+  // ------------------ SCENES ------------------
+  async function loadScenes() {
+    const r = await api(API_BASE + "/scenes");
+    if (!r.ok) return;
+
+    const sel = document.getElementById("sceneSelect");
+    sel.innerHTML = "";
+    (r.scenes || []).forEach(sc => {
+      const o = document.createElement("option");
+      o.value = sc.sceneName;
+      o.textContent = sc.sceneName;
+      if (sc.sceneName === r.currentProgramSceneName) o.selected = true;
+      sel.appendChild(o);
+    });
+
+    document.getElementById("sceneNow").textContent = "activa: " + (r.currentProgramSceneName || "–");
+    await loadSceneItems();
+  }
+
+  async function setScene() {
+    const sceneName = document.getElementById("sceneSelect").value;
+    const r = await api(API_BASE + "/scene/set", {
+      method: "POST",
+      body: JSON.stringify({ sceneName })
+    });
+    if (!r.ok) alert("Set scene: " + (r.error || r.message || "error"));
+    await loadScenes();
+    await refreshStatus();
+  }
+
+  // ------------------ OVERLAYS / ITEMS ------------------
+  async function loadSceneItems() {
+    const sceneName = document.getElementById("sceneSelect").value;
+    if (!sceneName) return;
+
+    const r = await api(API_BASE + "/scene/items", {
+      method: "POST",
+      body: JSON.stringify({ sceneName })
+    });
+    if (!r.ok) return;
+
+    const list = document.getElementById("itemsList");
+    list.innerHTML = "";
+
+    // Normalizamos: algunos backends devuelven "items" (tu caso actual), otros "sceneItems"
+    const items = r.items || r.sceneItems || [];
+
+    // Orden por índice visible
+    items.sort((a,b) => (a.sceneItemIndex ?? 999) - (b.sceneItemIndex ?? 999));
+
+    items.forEach(it => {
+      const enabled = !!it.sceneItemEnabled;
+      const div = document.createElement("div");
+      div.className = "item";
+
+      div.innerHTML = `
+        <div class="left">
+          <div class="name">${escapeHtml(it.sourceName || ("Item " + it.sceneItemId))}</div>
+          <div class="meta">id: ${it.sceneItemId} · kind: ${escapeHtml(it.inputKind || "-")} · idx: ${it.sceneItemIndex}</div>
+        </div>
+        <div class="row">
+          <span class="status ${enabled ? "ok" : "off"}">${enabled ? "ON" : "OFF"}</span>
+          <button class="${enabled ? "red" : "blue"}" data-id="${it.sceneItemId}" data-enabled="${enabled}">
+            ${enabled ? "Apagar" : "Prender"}
+          </button>
+        </div>
+      `;
+
+      const btn = div.querySelector("button");
+      btn.onclick = async () => {
+        const next = !enabled;
+        const rr = await api(API_BASE + "/scene/item/enabled", {
+          method: "POST",
+          body: JSON.stringify({ sceneName, sceneItemId: it.sceneItemId, enabled: next })
+        });
+        if (!rr.ok) alert("Overlay toggle: " + (rr.error || rr.message || "error"));
+        await loadSceneItems();
+      };
+
+      list.appendChild(div);
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  // ------------------ AUDIO ------------------
+  async function loadAudioInputs() {
+    const r = await api(API_BASE + "/inputs");
+    if (!r.ok) return;
+
+    // Filtramos entradas de audio típicas (wasapi_input_capture / wasapi_output_capture)
+    const inputs = (r.inputs || []);
+    const audio = inputs.filter(x =>
+      (x.inputKind || "").includes("wasapi_") ||
+      (x.unversionedInputKind || "").includes("wasapi_") ||
+      String(x.inputName || "").toLowerCase().includes("audio")
+    );
+
+    const sel = document.getElementById("audioInputSelect");
+    sel.innerHTML = "";
+
+    (audio.length ? audio : inputs).forEach(inp => {
+      const o = document.createElement("option");
+      o.value = inp.inputName;
+      o.textContent = inp.inputName;
+      sel.appendChild(o);
+    });
+
+    setPill("muteState", "mute: ?", "");
+  }
+
+  async function toggleMute() {
+    const inputName = document.getElementById("audioInputSelect").value;
+    if (!inputName) return alert("Seleccioná un input de audio");
+    const r = await api(API_BASE + "/audio/mute/toggle", {
+      method: "POST",
+      body: JSON.stringify({ inputName })
+    });
+    if (!r.ok) return alert("Toggle mute: " + (r.error || r.message || "error"));
+
+    // si el backend devuelve inputMuted, lo mostramos
+    if (typeof r.inputMuted === "boolean") {
+      setPill("muteState", "mute: " + (r.inputMuted ? "ON" : "OFF"), r.inputMuted ? "bad" : "");
+    } else {
+      setPill("muteState", "mute: OK", "");
+    }
+  }
+
+  const volSlider = document.getElementById("volSlider");
+  const volLabel = document.getElementById("volLabel");
+  volSlider.addEventListener("input", () => { volLabel.textContent = volSlider.value + " dB"; });
+
+  async function applyVolume() {
+    const inputName = document.getElementById("audioInputSelect").value;
+    if (!inputName) return alert("Seleccioná un input de audio");
+
+    const db = Number(volSlider.value);
+    const r = await api(API_BASE + "/audio/volume/set", {
+      method: "POST",
+      body: JSON.stringify({ inputName, inputVolumeDb: db })
+    });
+    if (!r.ok) return alert("Set volume: " + (r.error || r.message || "error"));
+    volLabel.textContent = db + " dB";
+  }
+
+  // ------------------ INIT / REFRESH ------------------
+  async function refreshAll() {
+    await checkAuth();
+    await refreshStatus();
+    await refreshStats();
+    await loadScenes();
+    await loadAudioInputs();
+    await refreshReplayStatus();
+  }
+
+  // Auto-refresh inteligente (baja carga)
+  refreshAll();
+  setInterval(refreshStatus, 2500);
+  setInterval(refreshStats, 5000);
+  setInterval(() => {
+    // refresco suave de overlays (por si alguien tocó OBS)
+    loadSceneItems();
+  }, 6000);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,178 @@
+/* =========================================================
+   OGAAC · OBS WebSocket
+   BASIC – SIN SCROLL (todo en 1 cuadro) + Paleta institucional
+   ========================================================= */
+
+html, body{ height:100%; }
+
+/* Evita scroll dentro del iframe en desktop */
+body.obs-basic{
+  padding:8px !important;
+  overflow:hidden;
+  background: var(--bg-main) !important;
+  color: var(--text-main) !important;
+}
+
+/* Panel único */
+.panel-one{
+  background: var(--bg-card);
+  border:1px solid var(--border-soft);
+  border-radius: 14px;
+  padding:10px;
+}
+
+/* Línea superior compacta */
+.topline{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+
+.ttl{
+  font-size:14px;
+  font-weight:800;
+  letter-spacing:.3px;
+  color: var(--text-main);
+}
+
+.topright{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+/* Grilla 2x2 */
+.grid2x2{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+
+/* Bloques internos */
+.blk{
+  background: var(--sidebar-bg);
+  border:1px solid var(--sidebar-border);
+  border-radius: 12px;
+  padding:10px;
+}
+
+.blk-h{
+  font-size:12px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  opacity:.9;
+  margin-bottom:8px;
+  color: var(--text-main);
+}
+
+/* =========================
+   BOTONES (base)
+   ========================= */
+.btn{
+  border:1px solid transparent;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:700;
+  color:#fff;
+}
+
+.btn.sm{ padding:7px 10px; font-size:12.5px; }
+.btn.lg{ padding:10px 12px; font-size:14px; height:42px; }
+
+/* Secundario gris (Actualizar, Mute, Aplicar) */
+.btn.gray{
+  background: var(--header-bg);
+  border-color: var(--border-soft);
+  color:#fff;
+}
+
+/* Acción secundaria institucional (ej: Cambiar escena) */
+.btn.blue{
+  background: var(--accent);
+  color:#fff;
+}
+
+/* =========================
+   COLORES SEMÁNTICOS (ÚNICO SISTEMA)
+   ========================= */
+
+/* Transmisión */
+.btn-stream-start{ background: var(--accent);      color:#fff; } /* Iniciar = bordó */
+.btn-stream-stop{  background: var(--status-off);  color:#fff; } /* Detener = rojo */
+
+/* Grabación */
+.btn-rec-start{    background: var(--status-ok);   color:#fff; } /* Grabar = verde */
+.btn-rec-pause{    background: var(--header-bg);   color:#fff; } /* Pausa = gris */
+.btn-rec-resume{   background: var(--accent);      color:#fff; } /* Sigue = bordó */
+.btn-rec-stop{     background: var(--status-off);  color:#fff; } /* Stop = rojo */
+
+/* =========================
+   FILAS / CAMPOS
+   ========================= */
+.row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:nowrap;
+}
+
+.field{
+  flex:1;
+  min-width:0;
+  height:36px;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border:1px solid var(--border-soft);
+  border-radius:12px;
+  padding:6px 10px;
+  font-size:12.5px;
+}
+
+/* Botoneras */
+.btnrow2{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:8px;
+}
+
+.btnrow4{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:8px;
+}
+
+/* Audio volumen */
+.volrow{ margin-top:8px; }
+.range{ flex:1; height:6px; }
+.subpill{ margin-top:8px; }
+
+/* Pills / status */
+.pill{
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:999px;
+  border:1px solid var(--border-soft);
+  color: var(--text-muted);
+  background: var(--chip-bg);
+}
+
+/* Status: EN VIVO / OFF */
+.status{
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  background: var(--header-bg);
+  color:#fff;
+}
+.status.ok{  background: var(--status-ok); }
+.status.off{ background: var(--status-off); }
+
+/* Responsive */
+@media (max-width:720px){
+  body.obs-basic{ overflow:auto; } /* en móvil permitimos scroll */
+  .grid2x2{ grid-template-columns: 1fr; }
+}

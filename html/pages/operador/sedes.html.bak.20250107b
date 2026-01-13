@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OGAAC · Operador · Sedes</title>
+  
+  <!-- CSS institucional base -->
+  <link rel="stylesheet" href="/ogaac.css" />
+  <!-- CSS específico del Operador -->
+  <link rel="stylesheet" href="/css/ogaac-operador.css" />
+</head>
+<body class="operador-page">
+
+<header class="operador-header">
+  <div class="operador-header-left">
+    <div class="operador-header-title">OGAAC · Modo Operador</div>
+    <div class="operador-header-subtitle" id="hdr-sub">Cargando sedes…</div>
+  </div>
+  <div class="operador-header-right">
+    <button id="warnings-pill" class="operador-warnings-trigger" hidden>⚠️ Advertencias</button>
+    <button id="btn-refresh" class="operador-toolbar-btn" style="padding:6px 12px;">🔄 Actualizar</button>
+  </div>
+</header>
+
+<div class="operador-wrap">
+  
+  <!-- DESCRIPCIÓN CONTEXTUAL -->
+  <div class="operador-context-bar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <p style="margin:0;">Seleccioná una sede para ver el detalle de sus salas.</p>
+    <a href="/operador/todas.html" class="operador-toolbar-btn" style="text-decoration:none;">📋 Ver todas las salas</a>
+  </div>
+
+  <!-- GRID DE SEDES -->
+  <div id="grid-sedes" class="operador-grid operador-grid--sedes"></div>
+
+</div>
+
+<!-- MODAL DE WARNINGS (reutilizado) -->
+<div id="warnings-shell" class="operador-modal-shell" hidden>
+  <div class="operador-modal" role="dialog" aria-labelledby="warnings-title" aria-modal="true">
+    <div class="operador-modal-header">
+      <div>
+        <div class="operador-modal-title" id="warnings-title">Advertencias de configuración</div>
+        <div class="operador-modal-subtitle" id="warnings-subtitle">Sin advertencias activas</div>
+      </div>
+      <button class="operador-modal-close" id="warnings-close" aria-label="Cerrar">×</button>
+    </div>
+    <div class="operador-modal-body" id="warnings-list">
+      <div class="operador-warning-empty">Sin advertencias activas.</div>
+    </div>
+  </div>
+</div>
+
+<footer class="operador-footer">
+  OGAAC · Modo Operador · Vista por sedes
+</footer>
+
+<script>
+(function() {
+  "use strict";
+
+  // ===== CONFIGURACIÓN =====
+  const POLL_INTERVAL = 15000; // 15s para vista agregada (menos frecuente)
+  let allSalas = [];
+  let sedesMap = new Map(); // sede -> { salas: [], stats: {} }
+  let pollTimer = null;
+
+  // ===== INICIALIZACIÓN =====
+  document.addEventListener("DOMContentLoaded", init);
+
+  async function init() {
+    setupEventListeners();
+    await loadConfig();
+    startPolling();
+  }
+
+  function setupEventListeners() {
+    const refreshBtn = document.getElementById("btn-refresh");
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", () => loadConfig());
+    }
+
+    const warningsClose = document.getElementById("warnings-close");
+    if (warningsClose) {
+      warningsClose.addEventListener("click", closeWarningsModal);
+    }
+
+    const warningsPill = document.getElementById("warnings-pill");
+    if (warningsPill) {
+      warningsPill.addEventListener("click", openWarningsModal);
+    }
+  }
+
+  // ===== CARGA DE DATOS =====
+  async function loadConfig() {
+    updateSubtitle("Actualizando…");
+    
+    try {
+      const res = await fetch("/api/obs/config", { credentials: "include" });
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = "/login.html";
+          return;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
+      
+      const data = await res.json();
+      allSalas = Array.isArray(data.salas) ? data.salas : [];
+      
+      // Actualizar warnings si existen
+      if (data.warnings) {
+        updateWarningsUI(data.warnings);
+      }
+      
+      // Agrupar por sede y renderizar
+      groupBySede();
+      renderSedes();
+      
+      updateSubtitle(`${sedesMap.size} sedes · ${allSalas.length} salas totales`);
+      
+    } catch (err) {
+      console.error("[sedes] Error cargando config:", err);
+      showError(err.message || "Error al cargar configuración");
+    }
+  }
+
+  // ===== AGRUPACIÓN POR SEDE =====
+  function groupBySede() {
+    sedesMap.clear();
+    
+    for (const sala of allSalas) {
+      const sedeKey = (sala.sede || "sin-sede").toLowerCase();
+      
+      if (!sedesMap.has(sedeKey)) {
+        sedesMap.set(sedeKey, {
+          key: sedeKey,
+          label: capitalize(sedeKey),
+          salas: [],
+          stats: { total: 0, live: 0, recording: 0, error: 0, offline: 0 }
+        });
+      }
+      
+      sedesMap.get(sedeKey).salas.push(sala);
+    }
+    
+    // Calcular stats iniciales (sin polling individual)
+    for (const [key, sede] of sedesMap) {
+      sede.stats.total = sede.salas.length;
+      sede.stats.offline = sede.salas.length; // Por defecto, todas offline
+    }
+  }
+
+  function capitalize(str) {
+    if (!str) return "";
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  // ===== RENDERIZADO =====
+  function renderSedes() {
+    const grid = document.getElementById("grid-sedes");
+    if (!grid) return;
+    
+    grid.innerHTML = "";
+    
+    if (sedesMap.size === 0) {
+      grid.innerHTML = `
+        <div class="operador-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+          <div class="operador-card-title">Sin sedes configuradas</div>
+          <p style="color: var(--text-muted); margin-top: 8px;">
+            No hay salas definidas en /api/obs/config
+          </p>
+        </div>
+      `;
+      return;
+    }
+    
+    // Ordenar sedes alfabéticamente
+    const sortedSedes = Array.from(sedesMap.values()).sort((a, b) => 
+      a.label.localeCompare(b.label)
+    );
+    
+    for (const sede of sortedSedes) {
+      grid.appendChild(createSedeCard(sede));
+    }
+    
+    // Iniciar polling de estado por sede
+    pollSedesStatus();
+  }
+
+  function createSedeCard(sede) {
+    const card = document.createElement("article");
+    card.className = "operador-card operador-card--sede";
+    card.dataset.sede = sede.key;
+    
+    // Determinar estado global
+    const globalStatus = getSedeGlobalStatus(sede.stats);
+    
+    card.innerHTML = `
+      <div class="operador-card-top">
+        <div>
+          <div class="operador-card-title operador-card-title--sede">${sede.label}</div>
+          <div class="operador-card-endpoint">${sede.stats.total} sala${sede.stats.total !== 1 ? 's' : ''} configurada${sede.stats.total !== 1 ? 's' : ''}</div>
+        </div>
+        <span class="operador-badge ${globalStatus.badgeClass}" data-sede-badge="${sede.key}">${globalStatus.label}</span>
+      </div>
+      
+      <div class="operador-sede-stats" data-sede-stats="${sede.key}">
+        <div class="operador-sede-stat">
+          <span class="operador-sede-stat-icon operador-sede-stat-icon--live">🟢</span>
+          <span class="operador-sede-stat-value" data-stat="live">${sede.stats.live}</span>
+          <span class="operador-sede-stat-label">En vivo</span>
+        </div>
+        <div class="operador-sede-stat">
+          <span class="operador-sede-stat-icon operador-sede-stat-icon--rec">⏺</span>
+          <span class="operador-sede-stat-value" data-stat="recording">${sede.stats.recording}</span>
+          <span class="operador-sede-stat-label">Grabando</span>
+        </div>
+        <div class="operador-sede-stat">
+          <span class="operador-sede-stat-icon operador-sede-stat-icon--error">🔴</span>
+          <span class="operador-sede-stat-value" data-stat="error">${sede.stats.error}</span>
+          <span class="operador-sede-stat-label">Con error</span>
+        </div>
+        <div class="operador-sede-stat">
+          <span class="operador-sede-stat-icon operador-sede-stat-icon--off">⚫</span>
+          <span class="operador-sede-stat-value" data-stat="offline">${sede.stats.offline}</span>
+          <span class="operador-sede-stat-label">Apagadas</span>
+        </div>
+      </div>
+      
+      <div class="operador-card-actions">
+        <button class="operador-card-btn operador-card-btn--primary operador-card-btn--full" 
+                onclick="navigateToSede('${sede.key}')">
+          👉 Ver salas de ${sede.label}
+        </button>
+      </div>
+    `;
+    
+    return card;
+  }
+
+  function getSedeGlobalStatus(stats) {
+    if (stats.live > 0) {
+      return { label: "Operativa", badgeClass: "operador-badge--live" };
+    }
+    if (stats.error > 0) {
+      return { label: "Atención", badgeClass: "operador-badge--warn" };
+    }
+    if (stats.recording > 0) {
+      return { label: "Grabando", badgeClass: "operador-badge--ok" };
+    }
+    return { label: "Inactiva", badgeClass: "operador-badge--disabled" };
+  }
+
+  // ===== POLLING DE ESTADO =====
+  function startPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(pollSedesStatus, POLL_INTERVAL);
+  }
+
+  async function pollSedesStatus() {
+    // Para cada sede, hacer un solo request que agregue el estado
+    // Opción 1: Endpoint agregado /api/obs/{sede}/summary (si existe)
+    // Opción 2: Polling individual y agregar client-side
+    
+    for (const [sedeKey, sede] of sedesMap) {
+      try {
+        // Reset stats
+        const stats = { total: sede.salas.length, live: 0, recording: 0, error: 0, offline: 0 };
+        
+        // Poll cada sala de la sede (en paralelo, limitado)
+        const promises = sede.salas.map(sala => 
+          pollSalaStatus(sedeKey, sala.sala).catch(() => ({ status: "offline" }))
+        );
+        
+        const results = await Promise.all(promises);
+        
+        for (const result of results) {
+          if (result.streaming) stats.live++;
+          else if (result.recording) stats.recording++;
+          else if (result.error) stats.error++;
+          else stats.offline++;
+        }
+        
+        sede.stats = stats;
+        updateSedeCardStats(sedeKey, stats);
+        
+      } catch (err) {
+        console.warn(`[sedes] Error polling ${sedeKey}:`, err);
+      }
+    }
+  }
+
+  async function pollSalaStatus(sede, sala) {
+    const url = `/api/obs/${encodeURIComponent(sede)}/${encodeURIComponent(sala)}/status`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    
+    try {
+      const res = await fetch(url, { 
+        credentials: "include",
+        signal: controller.signal
+      });
+      clearTimeout(timeout);
+      
+      if (!res.ok) return { status: "error", error: true };
+      
+      const data = await res.json();
+      return {
+        streaming: data.status?.outputActive === true,
+        recording: data.status?.recordingActive === true,
+        error: data.ok === false,
+        offline: !data.ok
+      };
+    } catch (err) {
+      clearTimeout(timeout);
+      return { status: "offline", offline: true };
+    }
+  }
+
+  function updateSedeCardStats(sedeKey, stats) {
+    const statsEl = document.querySelector(`[data-sede-stats="${sedeKey}"]`);
+    if (statsEl) {
+      statsEl.querySelector('[data-stat="live"]').textContent = stats.live;
+      statsEl.querySelector('[data-stat="recording"]').textContent = stats.recording;
+      statsEl.querySelector('[data-stat="error"]').textContent = stats.error;
+      statsEl.querySelector('[data-stat="offline"]').textContent = stats.offline;
+    }
+    
+    const badgeEl = document.querySelector(`[data-sede-badge="${sedeKey}"]`);
+    if (badgeEl) {
+      const globalStatus = getSedeGlobalStatus(stats);
+      badgeEl.textContent = globalStatus.label;
+      badgeEl.className = `operador-badge ${globalStatus.badgeClass}`;
+    }
+  }
+
+  // ===== NAVEGACIÓN =====
+  window.navigateToSede = function(sedeKey) {
+    // Navegar a la vista de detalle por sede
+    window.location.href = `/operador/${encodeURIComponent(sedeKey)}/`;
+  };
+
+  // ===== UI HELPERS =====
+  function updateSubtitle(text) {
+    const el = document.getElementById("hdr-sub");
+    if (el) el.textContent = text;
+  }
+
+  function showError(message) {
+    const grid = document.getElementById("grid-sedes");
+    if (grid) {
+      grid.innerHTML = `
+        <div class="operador-card" style="grid-column: 1 / -1; border-color: var(--op-status-offline-border);">
+          <div class="operador-card-title" style="color: var(--op-status-offline);">Error</div>
+          <p class="operador-card-row">${message}</p>
+          <button class="operador-card-btn" onclick="location.reload()">Reintentar</button>
+        </div>
+      `;
+    }
+    updateSubtitle("Error al cargar");
+  }
+
+  // ===== WARNINGS (simplificado) =====
+  function updateWarningsUI(warnings) {
+    const pill = document.getElementById("warnings-pill");
+    if (!pill) return;
+    
+    const count = Array.isArray(warnings) ? warnings.length : 0;
+    pill.hidden = count === 0;
+    if (count > 0) {
+      pill.textContent = `⚠️ ${count} advertencia${count !== 1 ? 's' : ''}`;
+    }
+  }
+
+  function openWarningsModal() {
+    const shell = document.getElementById("warnings-shell");
+    if (shell) {
+      shell.hidden = false;
+      document.body.classList.add("modal-open");
+    }
+  }
+
+  function closeWarningsModal() {
+    const shell = document.getElementById("warnings-shell");
+    if (shell) {
+      shell.hidden = true;
+      document.body.classList.remove("modal-open");
+    }
+  }
+
+})();
+</script>
+
+</body>
+</html>

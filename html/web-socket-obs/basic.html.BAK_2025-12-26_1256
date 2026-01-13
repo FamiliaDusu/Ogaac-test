@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>OGAAC · OBS · Básico · Sala 10</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="/web-socket-obs/css-socket-obs/obs-base.css">
+  <link rel="stylesheet" href="/web-socket-obs/css-socket-obs/obs-basic.css">
+</head>
+
+<body class="obs-basic">
+
+  <div class="panel-one">
+
+    <div class="topline">
+      <div class="ttl">OBS · Sala 10</div>
+
+      <div class="topright">
+        <span id="streamStatus" class="status off">OFF</span>
+        <span id="recStatus" class="pill">rec: ?</span>
+
+        <button class="btn sm gray" type="button" onclick="refreshAll()">?</button>
+
+        <span id="authStatus" class="pill">auth: ?</span>
+      </div>
+    </div>
+
+    <div class="grid2x2">
+
+      <!-- STREAM -->
+      <section class="blk">
+        <div class="blk-h">Transmisión</div>
+        <div class="btnrow2">
+          <button class="btn btn-stream-start lg" type="button" onclick="startStream()">Iniciar</button>
+          <button class="btn btn-stream-stop  lg" type="button" onclick="stopStream()">Detener</button>
+        </div>
+      </section>
+
+      <!-- REC -->
+      <section class="blk">
+        <div class="blk-h">Grabación</div>
+        <div class="btnrow4">
+          <button class="btn btn-rec-start sm"  type="button" onclick="startRecord()">Grabar</button>
+          <button class="btn btn-rec-pause sm"  type="button" onclick="pauseRecord()">Pausa</button>
+          <button class="btn btn-rec-resume sm" type="button" onclick="resumeRecord()">Sigue</button>
+          <button class="btn btn-rec-stop sm"   type="button" onclick="stopRecord()">Stop</button>
+        </div>
+      </section>
+
+      <!-- SCENES -->
+      <section class="blk">
+        <div class="blk-h">Escenas</div>
+        <div class="row">
+          <select id="sceneSelect" class="field"></select>
+          <button class="btn sm blue" type="button" onclick="setScene()">Cambiar</button>
+        </div>
+        <div class="subpill">
+          <span id="sceneNow" class="pill">–</span>
+        </div>
+      </section>
+
+      <!-- AUDIO -->
+      <section class="blk">
+        <div class="blk-h">Audio</div>
+        <div class="row">
+          <select id="audioInputSelect" class="field"></select>
+          <button class="btn sm gray" type="button" onclick="toggleMute()">Mute</button>
+          <span id="muteState" class="pill">mute: ?</span>
+        </div>
+
+        <div class="row volrow">
+          <input id="volSlider" class="range" type="range" min="-60" max="10" value="-10" step="1" />
+          <span id="volLabel" class="pill">-10 dB</span>
+          <button class="btn sm gray" type="button" onclick="applyVolume()">Aplicar</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+<script>
+  // ===============================
+  // Multi-sala por querystring
+  // ===============================
+  const qs = new URLSearchParams(location.search);
+  const OGAAC_SEDE = (qs.get("sede") || "").trim();
+  const OGAAC_SALA = (qs.get("sala") || "").trim();
+
+  if (!OGAAC_SEDE || !OGAAC_SALA) {
+    document.addEventListener("DOMContentLoaded", () => {
+      document.body.innerHTML = `
+        <div style="font-family:system-ui;padding:16px">
+          <h2>Faltan parámetros</h2>
+          <p>Usar: <code>?sede=suipacha&sala=sala10</code></p>
+        </div>
+      `;
+    });
+    throw new Error("Faltan sede/sala en querystring");
+  }
+
+  function api(path) {
+    return `/api/obs/${encodeURIComponent(OGAAC_SEDE)}/${encodeURIComponent(OGAAC_SALA)}${path}`;
+  }
+</script>
+
+<script>
+  const API = "";
+
+  async function api(path, opts = {}) {
+    const res = await fetch(API + path, {
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      ...opts
+    });
+
+    const ct = res.headers.get("content-type") || "";
+    if (!ct.includes("application/json")) {
+      const text = await res.text();
+      return { ok: false, error: "Respuesta no JSON", detail: text.slice(0, 200) };
+    }
+    return res.json();
+  }
+
+  function setPill(id, text) {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = text;
+  }
+
+  async function checkAuth() {
+    const r = await api("/api/check");
+    if (r.ok) setPill("authStatus", "auth: OK (" + r.user + ")");
+    else setPill("authStatus", "auth: NO");
+  }
+
+  async function refreshStatus() {
+    const r = await api("/api/obs/sala10/status");
+    if (!r.ok) return;
+
+    const active = !!r.status.outputActive;
+    const el = document.getElementById("streamStatus");
+    el.textContent = active ? "EN VIVO" : "OFF";
+    el.className = "status " + (active ? "ok" : "off");
+  }
+
+  async function startStream() {
+    const r = await api("/api/obs/sala10/stream/start", { method: "POST" });
+    if (!r.ok) alert("Start stream: " + (r.error || r.message || "error"));
+    await refreshStatus();
+  }
+  async function stopStream() {
+    const r = await api("/api/obs/sala10/stream/stop", { method: "POST" });
+    if (!r.ok) alert("Stop stream: " + (r.error || r.message || "error"));
+    await refreshStatus();
+  }
+
+  async function startRecord() {
+    const r = await api("/api/obs/sala10/record/start", { method: "POST" });
+    if (!r.ok) alert("Start record: " + (r.error || r.message || "error"));
+    setPill("recStatus", "rec: START");
+  }
+  async function stopRecord() {
+    const r = await api("/api/obs/sala10/record/stop", { method: "POST" });
+    if (!r.ok) alert("Stop record: " + (r.error || r.message || "error"));
+    setPill("recStatus", "rec: STOP");
+  }
+  async function pauseRecord() {
+    const r = await api("/api/obs/sala10/record/pause", { method: "POST" });
+    if (!r.ok) alert("Pause record: " + (r.error || r.message || "error"));
+    setPill("recStatus", "rec: PAUSE");
+  }
+  async function resumeRecord() {
+    const r = await api("/api/obs/sala10/record/resume", { method: "POST" });
+    if (!r.ok) alert("Resume record: " + (r.error || r.message || "error"));
+    setPill("recStatus", "rec: RESUME");
+  }
+
+  async function loadScenes() {
+    const r = await api("/api/obs/sala10/scenes");
+    if (!r.ok) return;
+
+    const sel = document.getElementById("sceneSelect");
+    sel.innerHTML = "";
+    (r.scenes || []).forEach(sc => {
+      const o = document.createElement("option");
+      o.value = sc.sceneName;
+      o.textContent = sc.sceneName;
+      if (sc.sceneName === r.currentProgramSceneName) o.selected = true;
+      sel.appendChild(o);
+    });
+
+    document.getElementById("sceneNow").textContent =
+      "activa: " + (r.currentProgramSceneName || "–");
+  }
+
+  async function setScene() {
+    const sceneName = document.getElementById("sceneSelect").value;
+    const r = await api("/api/obs/sala10/scene/set", {
+      method: "POST",
+      body: JSON.stringify({ sceneName })
+    });
+    if (!r.ok) alert("Set scene: " + (r.error || r.message || "error"));
+    await loadScenes();
+    await refreshStatus();
+  }
+
+  async function loadAudioInputs() {
+    const r = await api("/api/obs/sala10/inputs");
+    if (!r.ok) return;
+
+    const inputs = (r.inputs || []);
+    const audio = inputs.filter(x =>
+      (x.inputKind || "").includes("wasapi_") ||
+      (x.unversionedInputKind || "").includes("wasapi_") ||
+      String(x.inputName || "").toLowerCase().includes("audio")
+    );
+
+    const sel = document.getElementById("audioInputSelect");
+    sel.innerHTML = "";
+    (audio.length ? audio : inputs).forEach(inp => {
+      const o = document.createElement("option");
+      o.value = inp.inputName;
+      o.textContent = inp.inputName;
+      sel.appendChild(o);
+    });
+
+    setPill("muteState", "mute: ?");
+  }
+
+  async function toggleMute() {
+    const inputName = document.getElementById("audioInputSelect").value;
+    if (!inputName) return alert("Seleccioná un input de audio");
+    const r = await api("/api/obs/sala10/audio/mute/toggle", {
+      method: "POST",
+      body: JSON.stringify({ inputName })
+    });
+    if (!r.ok) return alert("Toggle mute: " + (r.error || r.message || "error"));
+
+    if (typeof r.inputMuted === "boolean") {
+      setPill("muteState", "mute: " + (r.inputMuted ? "ON" : "OFF"));
+    } else {
+      setPill("muteState", "mute: OK");
+    }
+  }
+
+  const volSlider = document.getElementById("volSlider");
+  const volLabel = document.getElementById("volLabel");
+  volSlider.addEventListener("input", () => { volLabel.textContent = volSlider.value + " dB"; });
+
+  async function applyVolume() {
+    const inputName = document.getElementById("audioInputSelect").value;
+    if (!inputName) return alert("Seleccioná un input de audio");
+
+    const db = Number(volSlider.value);
+    const r = await api("/api/obs/sala10/audio/volume/set", {
+      method: "POST",
+      body: JSON.stringify({ inputName, inputVolumeDb: db })
+    });
+    if (!r.ok) return alert("Set volume: " + (r.error || r.message || "error"));
+    volLabel.textContent = db + " dB";
+  }
+
+  async function refreshAll() {
+    await checkAuth();
+    await refreshStatus();
+    await loadScenes();
+    await loadAudioInputs();
+  }
+
+  refreshAll();
+  setInterval(refreshStatus, 2500);
+</script>
+
+</body>
+</html>

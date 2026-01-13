@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "data": {
+    "visibleBanner": true,
+    "visibleOverlay": false,
+    "updatedAt": "2025-12-29T17:36:09.201Z",
+    "fields": {
+      "fecha": "29/12/2025",
+      "juzgado": "Juzgado N° 1",
+      "sala": "Sala 10",
+      "expediente": "EXP-12345/2025",
+      "caratula": "Perez s/ contravención",
+      "imputados": "Juan Perez",
+      "tipoProcedimiento": "Control de detención",
+      "sede": "Suipacha"
+    }
+  }
+}

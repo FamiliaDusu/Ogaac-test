@@ -1,0 +1,192 @@
+/* =========================================================
+   OGAAC · OBS WebSocket
+   CSS BASE (FULL + BASIC)
+   ========================================================= */
+
+:root{
+  /* Paleta institucional OGAAC */
+  --bg-main: #E5E6E8;
+  --bg-card: #FFFFFF;
+  --border-soft: #C8C9CC;
+  --accent: #7A1E2C;
+  --accent-soft: #7A1E2C;
+  --text-main: #303030;
+  --text-muted: #6A6A6A;
+  --status-ok: #3fbf6b;
+  --status-off: #f25f5c;
+  --header-bg: #4A4A4A;
+  --footer-bg: #4A4A4A;
+  --chip-bg: #FFFFFF;
+  --sidebar-bg: #F2F3F5;
+  --sidebar-border: #D0D1D4;
+
+  /* Mapeo para el panel OBS (para no reescribir todo) */
+  --bg: var(--bg-main);
+  --panel: var(--bg-card);
+  --panel-soft: var(--sidebar-bg);
+  --border: var(--border-soft);
+
+  --txt: var(--text-main);
+  --muted: var(--text-muted);
+
+  --ok: var(--status-ok);
+  --bad: var(--status-off);
+  --blue: var(--accent);          /* ACCIÓN PRINCIPAL = bordó */
+  --gray: var(--header-bg);       /* botones secundarios gris oscuro */
+
+  --radius: 12px;
+  --gap: 10px;
+}
+
+
+/* ================= RESET BÁSICO ================= */
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; background:var(--bg); color:var(--txt); }
+body{
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  font-size:13px;
+}
+
+/* ================= TIPOGRAFÍA ================= */
+h1{
+  margin:0 0 10px 0;
+  font-size:16px;
+  font-weight:700;
+}
+h3{
+  margin:0 0 8px 0;
+  font-size:13px;
+  font-weight:600;
+}
+
+/* ================= LAYOUT ================= */
+.grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:var(--gap);
+}
+
+.two{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:var(--gap);
+}
+
+@media(min-width:900px){
+  .two{ grid-template-columns:1fr 1fr; }
+}
+
+/* ================= CARDS ================= */
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:10px;
+}
+
+/* ================= FILAS ================= */
+.row{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+}
+
+.row-between{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.stack{
+  display:grid;
+  gap:8px;
+}
+
+.spacer{ height:8px; }
+
+/* ================= BOTONES ================= */
+button, select, input[type=range]{
+  border:1px solid transparent;
+  border-radius:10px;
+  padding:8px 10px;
+  font-size:13px;
+}
+
+button{
+  cursor:pointer;
+  background:var(--ok);
+  color:#fff;
+}
+
+button.blue{ background:var(--blue); }
+button.red{ background:var(--bad); }
+button.gray{
+  background:var(--gray);
+  color:var(--txt);
+  border-color:var(--border);
+}
+
+button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+.btnblock{
+  width:100%;
+  text-align:center;
+  font-weight:650;
+}
+
+/* ================= SELECT / INPUT ================= */
+select{
+  background:var(--panel-soft);
+  color:var(--txt);
+  border:1px solid var(--border);
+}
+
+.fieldwide{ width:100%; }
+
+/* ================= STATUS / PILL ================= */
+.status{
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+  background:var(--gray);
+}
+.status.ok{ background:var(--ok); }
+.status.off{ background:#6e7681; }
+.status.bad{ background:var(--bad); }
+
+.pill{
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  color:var(--muted);
+}
+
+.muted{
+  color:var(--muted);
+  font-size:12px;
+}
+
+/* ================= BOTONERAS ================= */
+.actions-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.actions-4{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+@media(max-width:520px){
+  .actions-2{ grid-template-columns:1fr; }
+  .actions-4{ grid-template-columns:1fr 1fr; }
+}

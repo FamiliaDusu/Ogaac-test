@@ -1,0 +1,263 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sala 9 Suipacha - Streaming en vivo</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    :root {
+      --bg-main: #0b0d12;
+      --bg-card: #141823;
+      --border-soft: #242938;
+      --accent: #1f6feb;
+      --text-main: #f5f7fb;
+      --text-muted: #9ca3b5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top, #1b2340 0, #05060a 55%, #020308 100%);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(5, 7, 12, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 10px 24px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .back-btn {
+      font-size: 13px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      background: transparent;
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .back-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 22px 20px 20px;
+    }
+
+    .content {
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .card {
+      background: rgba(13, 17, 27, 0.96);
+      border-radius: 12px;
+      padding: 18px;
+      border: 1px solid rgba(64, 73, 107, 0.8);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.65);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .status-tag {
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      color: var(--text-muted);
+    }
+
+    .status-ok {
+      border-color: #3fbf6b;
+      color: #3fbf6b;
+    }
+
+    .video-wrapper {
+      margin-top: 10px;
+    }
+
+    video {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 10px;
+      background: #000;
+      outline: none;
+    }
+
+    #status {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    footer {
+      text-align: center;
+      padding: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-soft);
+      background: #05060a;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-title">Sala 9 - Sede Suipacha</div>
+    <div class="brand-subtitle">Streaming interno de audiencia judicial en tiempo real</div>
+  </div>
+  <button class="back-btn" onclick="window.location.href='index.html'">
+    Volver al portal de salas
+  </button>
+</header>
+
+<main>
+  <div class="content">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Transmision en vivo</div>
+          <div class="card-subtitle">Fuente: OBS / encoder -> Nginx RTMP/HLS (sala9Suipacha / stream1)</div>
+        </div>
+        <div id="statusTag" class="status-tag">Verificando senal...</div>
+      </div>
+
+      <div class="video-wrapper">
+        <video id="video" controls autoplay muted></video>
+        <div id="status">Cargando stream...</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  OGAAC Â· Uso interno Â· Sala 9 Suipacha Â· Nginx + RTMP + HLS
+</footer>
+
+<script>
+  (function () {
+    var video = document.getElementById('video');
+    var status = document.getElementById('status');
+    var statusTag = document.getElementById('statusTag');
+
+    var src = '/hls/sala9Suipacha/stream1/index.m3u8';
+
+    function marcarSinSenal(msg) {
+      status.textContent = msg || 'No se detecta senal de la sala. Verificar OBS/encoder.';
+      statusTag.textContent = 'Sin senal';
+      statusTag.classList.remove('status-ok');
+    }
+
+    function marcarEnVivo() {
+      statusTag.textContent = 'En vivo';
+      statusTag.classList.add('status-ok');
+    }
+
+    function playStream(url) {
+      if (Hls.isSupported()) {
+        var hls = new Hls();
+        hls.loadSource(url);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, function () {
+          video.play().then(function () {
+            status.textContent = 'Reproduciendo Sala 9 Suipacha.';
+            marcarEnVivo();
+          }).catch(function () {
+            status.textContent = 'El navegador bloqueo la reproduccion automatica. Hace clic en PLAY para iniciar.';
+            marcarEnVivo();
+          });
+        });
+
+        hls.on(Hls.Events.ERROR, function (event, data) {
+          console.error('HLS error:', data);
+          marcarSinSenal('Error al reproducir el stream (' + data.type + '). Verificar emision.');
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('loadedmetadata', function () {
+          video.play().then(function () {
+            status.textContent = 'Reproduciendo Sala 9 Suipacha.';
+            marcarEnVivo();
+          }).catch(function () {
+            status.textContent = 'El navegador bloqueo la reproduccion automatica. Hace clic en PLAY para iniciar.';
+            marcarEnVivo();
+          });
+        });
+      } else {
+        status.textContent = 'El navegador no soporta HLS de forma nativa.';
+        statusTag.textContent = 'Formato no soportado';
+      }
+    }
+
+    fetch(src, { method: 'HEAD' })
+      .then(function (res) {
+        if (res.ok) {
+          status.textContent = 'Senal detectada. Iniciando reproduccion...';
+          playStream(src);
+        } else {
+          marcarSinSenal('No se encuentra el manifiesto HLS. Verificar que el encoder este transmitiendo.');
+        }
+      })
+      .catch(function () {
+        marcarSinSenal('No se pudo contactar al servidor HLS. Verificar red/servicio.');
+      });
+  })();
+</script>
+
+</body>
+</html>
+

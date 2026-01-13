@@ -1,0 +1,775 @@
+/* ======================================================
+   OGAAC · Tema Institucional CM (CLARO)
+   Archivo: ogaac.css
+   ====================================================== */
+
+/* ===============================
+   1) Variables de color y diseño
+   =============================== */
+
+:root {
+  --bg-main: #E5E6E8;
+  --bg-card: #FFFFFF;
+  --border-soft: #C8C9CC;
+  --accent: #7A1E2C;          /* Bordó institucional */
+  --accent-soft: #7A1E2C;
+  --text-main: #303030;
+  --text-muted: #6A6A6A;
+  --status-ok: #3fbf6b;
+  --status-off: #f25f5c;
+  --header-bg: #4A4A4A;
+  --footer-bg: #4A4A4A;
+  --chip-bg: #FFFFFF;
+  --sidebar-bg: #F2F3F5;
+  --sidebar-border: #D0D1D4;
+
+  /* Sombra y radios */
+  --radius-soft: 10px;
+  --shadow-soft: 0 6px 20px rgba(0, 0, 0, 0.12);
+
+  /* Tipografía */
+  --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Roboto", sans-serif;
+}
+
+/* ===============================
+   2) Reset básico
+   =============================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* ===============================
+   3) Estilo general del body
+   =============================== */
+
+body {
+  background: var(--bg-main);
+  font-family: var(--font-main);
+  color: var(--text-main);
+}
+
+/* ===============================
+   4) Layout base de página
+   =============================== */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-main {
+  flex: 1;
+  padding: 24px 16px;
+}
+
+@media (min-width: 768px) {
+  .page-main {
+    padding: 32px 48px;
+  }
+}
+
+/* ===============================
+   5) Header institucional CM
+   =============================== */
+
+/* HEADER CM */
+.ogaac-header {
+  background: var(--header-bg);
+  border-bottom: 1px solid #333;
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ogaac-brand-title {
+  font-size: 19px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.ogaac-brand-subtitle {
+  font-size: 12px;
+  color: #e3e3e3;
+}
+
+/* Botón Cerrar sesión — contorno blanco + texto blanco */
+.btn-logout {
+  background: transparent;
+  border: 1px solid #ffffff;   /* borde blanco */
+  color: #ffffff;              /* texto blanco */
+  padding: 6px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+/* Hover: fondo bordó institucional, texto blanco */
+.btn-logout:hover {
+  background: var(--accent);   /* #7A1E2C */
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+
+
+.nav-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.35);
+  font-size: 12px;
+  background: transparent;
+  color: #ffffff;
+}
+
+
+
+/* ===============================
+   6) Footer
+   =============================== */
+
+.ogaac-footer {
+  background: var(--footer-bg);
+  border-top: 1px solid #333333;
+  padding: 10px 20px;
+  color: #f1f1f1;
+  font-size: 12px;
+  text-align: right;
+}
+
+/* ===============================
+   7) Botones
+   =============================== */
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  background: var(--accent);
+  color: #ffffff;
+  transition: background 0.25s ease, transform 0.1s ease;
+}
+
+.btn:hover {
+  background: #5d1622;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-soft);
+  color: var(--accent);
+}
+
+.btn-ghost:hover {
+  background: #f2d3d7;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* ===============================
+   8) Cards
+   =============================== */
+
+/* CARD UNIFORME (altura pareja y botón alineado abajo) */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  transition: 0.15s ease;
+  
+  /* Clave: layout de columna y espacio para empujar el footer abajo */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  /* Altura mínima para que todas midan lo mismo */
+  min-height: 220px;
+}
+
+.card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  margin-bottom: 8px;
+}
+
+.card-body {
+  flex: 1; /* Clave: este empuja el footer hacia abajo */
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.card-footer {
+  margin-top: auto; /* Clave: alinea el botón siempre al final */
+  display: flex;
+  justify-content: flex-end;
+}
+
+
+/* ===============================
+   9) Grid de salas
+   =============================== */
+
+.salas-grid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .salas-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ===============================
+   10) Chips de estado
+   =============================== */
+
+.status-chip {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--chip-bg);
+  border: 1px solid var(--border-soft);
+}
+
+.status-ok {
+  color: var(--status-ok);
+}
+
+.status-off {
+  color: var(--status-off);
+}
+
+/* ===============================
+   11) Login page
+   =============================== */
+
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  min-height: 100vh;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+}
+
+/* ===============================
+   12) Formularios
+   =============================== */
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.form-field label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.form-field input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-soft);
+  font-size: 14px;
+}
+
+.form-field input:focus {
+  outline: 2px solid rgba(122, 30, 44, 0.30);
+  border-color: var(--accent);
+}
+
+/* Error de login */
+.login-error {
+  padding: 8px 10px;
+  border-left: 4px solid var(--status-off);
+  background: #fde7e7;
+  color: var(--status-off);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+/* ===============================
+   13) Utilidades
+   =============================== */
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mt-8 {
+  margin-top: 8px;
+}
+
+.mt-16 {
+  margin-top: 16px;
+}
+/* ===============================
+   Portal de Salas (index.html)
+   =============================== */
+
+.salas-layout {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* Sidebar izquierda */
+
+.sidebar {
+  width: 230px;
+  max-width: 260px;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sidebar {
+  width: 240px;
+  background: #f1f2f4;
+  border-right: 1px solid #d4d4d4;
+  padding: 20px;
+}
+
+.sidebar-btn {
+  background: #ffffff;
+  border: 1px solid var(--border-soft);
+}
+
+.sidebar-btn.active {
+  border-color: var(--accent);
+  background: #f8f8f9;
+}
+
+.sidebar-section-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.sidebar-group {
+  margin-bottom: 10px;
+}
+
+.sidebar-btn {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-soft);
+  background: #ffffff;
+  color: var(--text-main);
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.sidebar-btn small {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.sidebar-btn.active {
+  border-color: var(--accent);
+  background: #f7f7f9;
+}
+
+.sidebar-btn:hover {
+  border-color: var(--accent);
+}
+
+.sidebar-link {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sidebar-link:hover {
+  filter: brightness(1.05);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Contenido principal salas */
+
+.main-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+
+.content-inner {
+  width: 100%;
+  max-width: 1400px;
+}
+
+/* Título de sección (modo por defecto: columna, alineado a la izquierda) */
+.section-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.section-title h2 {
+  font-size: 16px;
+  margin: 0;
+  font-weight: 500;
+}
+
+.section-title small {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Variante sólo para index: título izq + texto der */
+.section-title--split {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Cards de salas (reusan .card base) */
+
+.salas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.card-title-inline {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.card-body {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Estado de señal */
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.status-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+  background: #aaaaaa;
+}
+
+.status-dot.online {
+  background: var(--status-ok);
+  box-shadow: 0 0 6px rgba(63, 191, 107, 0.7);
+}
+
+.status-dot.offline {
+  background: var(--status-off);
+  box-shadow: 0 0 6px rgba(242, 95, 92, 0.6);
+}
+
+/* Pill en header */
+
+.nav-pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  font-size: 12px;
+  background: transparent;
+  color: #f5f5f5;
+}
+/* ===============================
+   Página Audiencias grabadas
+   =============================== */
+
+.page-subheader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.page-subheader-main h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.page-subheader-main p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Botón "volver" más sobrio, debajo del título */
+.back-link {
+  margin-top: 4px;
+}
+
+.back-link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background: #ffffff;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.back-link a:hover {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+/* Grid de juzgados: menos columnas, tarjetas más anchas */
+.aud-grid {
+  display: grid;
+  gap: 18px;
+}
+
+/* 1 col en pantallas chicas */
+@media (max-width: 699px) {
+  .aud-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 2 cols en pantallas medianas */
+@media (min-width: 700px) and (max-width: 1099px) {
+  .aud-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* 3 cols en escritorio */
+@media (min-width: 1100px) {
+  .aud-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Cards de audiencias: más “panel” que tarjetita */
+.aud-card {
+  min-height: 180px;             /* un poco más altas que antes */
+}
+
+.aud-card h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.aud-card p {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+/* Ajuste de alineación solo para audiencias */
+.aud-page .section-title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.aud-page .section-title h2 {
+  margin: 0;
+}
+
+.aud-page .section-title small {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.aud-page .content-inner {
+  max-width: 1200px;   /* Podemos probar 1100 o 1000 si lo querés más compacto */
+  margin: 0 auto;      /* CENTRA TODO */
+  padding: 0 20px;     /* Bordes laterales suaves */
+}
+
+/* ===============================
+   Página Juzgado · Audiencias
+   =============================== */
+
+.juz-page .page-main {
+  padding: 32px 48px;
+}
+
+.juz-page-layout {
+  display: flex;
+  min-height: 0;
+}
+
+/* Card de lista de archivos */
+.file-card {
+  margin-top: 8px;
+}
+
+/* Encabezado y filas de la lista */
+.fila-header,
+.fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.fila-header {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-muted);
+}
+
+.fila {
+  padding: 8px 0;
+  border-bottom: 1px solid #e2e3e6;
+}
+
+.fila:last-child {
+  border-bottom: none;
+}
+
+.nombre {
+  word-break: break-all;
+  color: var(--text-main);
+}
+
+.actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Botón "Ver" dentro de la lista */
+.link-ver {
+  font-size: 12px;
+  text-decoration: none;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+  display: inline-block;
+  transition: all 0.2s ease;
+}
+
+.link-ver:hover {
+  filter: brightness(1.05);
+}
+
+/* Botón volver dentro del toolbar */
+.btn-back {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-back:hover {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+/* Texto de estado ("Cargando...") */
+.estado {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Toolbar superior dentro del juzgado */
+.juz-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}

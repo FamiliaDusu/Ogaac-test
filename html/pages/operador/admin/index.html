@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OGAAC · Administración de Usuarios</title>
+  
+  <link rel="stylesheet" href="/ogaac.css" />
+  <link rel="stylesheet" href="/operador/_shared/css/control-room.css" />
+  <link rel="stylesheet" href="/operador/admin/admin.css" />
+  
+  <!-- RBAC Frontend -->
+  <script src="/operador/_shared/auth-rbac.js?v=20260108-AUTH"></script>
+</head>
+
+<body class="page" data-role="admin">
+
+<!-- ============================================ -->
+<!-- HEADER -->
+<!-- ============================================ -->
+<header class="ogaac-header header-control-room">
+  <div class="header-left">
+    <a href="/operador/sedes.html" class="ogaac-brand-title" style="text-decoration:none;color:inherit;">
+      ← OGAAC
+    </a>
+  </div>
+
+  <div class="header-center">
+    <span style="font-weight:600;">Administración de Usuarios</span>
+  </div>
+
+  <div class="header-right">
+    <span id="user-badge" style="margin-right:12px;font-size:13px;opacity:0.9;">Cargando...</span>
+    <button class="btn-logout" type="button" data-action="logout">Cerrar sesión</button>
+  </div>
+</header>
+
+<!-- ============================================ -->
+<!-- MAIN CONTENT -->
+<!-- ============================================ -->
+<main class="page-main admin-main">
+  <div class="content-inner">
+    
+    <!-- Toolbar -->
+    <div class="admin-toolbar">
+      <button id="btnCreateUser" class="btn btn-primary">
+        ➕ Crear usuario
+      </button>
+      
+      <div class="admin-info">
+        <span id="userCount">0 usuarios</span>
+        <span class="separator">|</span>
+        <span class="info-text">Usuarios de Active Directory no se pueden editar</span>
+      </div>
+    </div>
+
+    <!-- Tabla de usuarios -->
+    <div class="admin-panel">
+      <div class="table-responsive">
+        <table class="admin-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Rol</th>
+              <th>Origen</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <tr>
+              <td colspan="5" style="text-align:center;padding:40px;color:#666;">
+                Cargando usuarios...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ============================================ -->
+<!-- MODAL: CREAR USUARIO -->
+<!-- ============================================ -->
+<div id="modalCreateUser" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Crear Usuario Local</h2>
+      <button class="modal-close" onclick="closeModal('modalCreateUser')">&times;</button>
+    </div>
+    
+    <form id="formCreateUser" class="modal-body">
+      <div class="form-group">
+        <label for="createUsername">Usuario</label>
+        <input 
+          type="text" 
+          id="createUsername" 
+          name="username" 
+          required 
+          placeholder="Ej: jperez"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="createPassword">Contraseña</label>
+        <input 
+          type="password" 
+          id="createPassword" 
+          name="password" 
+          required 
+          placeholder="Mínimo 6 caracteres"
+          minlength="6"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="createRole">Rol</label>
+        <select id="createRole" name="role" required>
+          <option value="">Seleccionar...</option>
+          <option value="viewer">Viewer (solo visualización)</option>
+          <option value="operator">Operator (control de salas)</option>
+          <option value="admin">Admin (gestión completa)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="createEnabled" name="enabled" checked />
+          Usuario activo
+        </label>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalCreateUser')">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+          Crear usuario
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL: EDITAR USUARIO -->
+<!-- ============================================ -->
+<div id="modalEditUser" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Editar Usuario</h2>
+      <button class="modal-close" onclick="closeModal('modalEditUser')">&times;</button>
+    </div>
+    
+    <form id="formEditUser" class="modal-body">
+      <input type="hidden" id="editUsername" name="username" />
+
+      <div class="form-group">
+        <label>Usuario</label>
+        <input 
+          type="text" 
+          id="editUsernameDisplay" 
+          disabled 
+          style="background:#f5f5f5;cursor:not-allowed;"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="editRole">Rol</label>
+        <select id="editRole" name="role" required>
+          <option value="viewer">Viewer (solo visualización)</option>
+          <option value="operator">Operator (control de salas)</option>
+          <option value="admin">Admin (gestión completa)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="editEnabled" name="enabled" />
+          Usuario activo
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label for="editPassword">Nueva contraseña (opcional)</label>
+        <input 
+          type="password" 
+          id="editPassword" 
+          name="password" 
+          placeholder="Dejar vacío para no cambiar"
+          minlength="6"
+        />
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalEditUser')">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+          Guardar cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL: CONFIRMACIÓN DE ELIMINACIÓN -->
+<!-- ============================================ -->
+<div id="modalDeleteUser" class="modal">
+  <div class="modal-content modal-confirm">
+    <div class="modal-header">
+      <h2>⚠️ Confirmar eliminación</h2>
+      <button class="modal-close" onclick="closeModal('modalDeleteUser')">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <p>¿Estás seguro de que deseas eliminar al usuario <strong id="deleteUsername"></strong>?</p>
+      <p style="color:#d32f2f;margin-top:8px;">Esta acción no se puede deshacer.</p>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeModal('modalDeleteUser')">
+        Cancelar
+      </button>
+      <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+        Sí, eliminar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast de notificaciones -->
+<div id="toast" class="toast"></div>
+
+<!-- Scripts -->
+<script src="/operador/_shared/logout.js"></script>
+<script src="/operador/admin/admin.js"></script>
+
+</body>
+</html>

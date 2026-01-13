@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>OGAAC · Operador · Tacuari</title>
+  <link rel="stylesheet" href="/ogaac.css"/>
+  <style>
+/* ===== Menú operador (mínimo, institucional) ===== */
+.menu-wrap{max-width:1200px;margin:0 auto}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.menu-kpis{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.badge{
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid rgba(0,0,0,.12);
+  background:#fff;
+  color: #303030;
+}
+.badge.ok{ background: rgba(63,191,107,.12); }
+.badge.todo{ background: rgba(242,95,92,.10); }
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(0,0,0,.12);
+  background:#fff;
+  text-decoration:none;
+  color: var(--text-main);
+}
+.pill:hover{ background: rgba(0,0,0,.04); }
+.pill-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pill-col{display:grid;gap:10px}
+.page-title{
+  margin:0 0 12px 0;
+  font-size:20px;
+  font-weight:600;
+}
+.page-note{ margin:0 0 16px 0; color: var(--text-muted); }
+.top-actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+</style>
+</head>
+<body class="page">
+<header class="ogaac-header">
+  <div class="ogaac-brand">
+    <div class="ogaac-brand-title">OGAAC · Operador</div>
+    <div class="ogaac-brand-subtitle">Sede Tacuari · Seleccionar sala</div>
+  </div>
+  <div class="top-actions">
+    <a class="btn-ghost btn" href="/index.html">← Volver al Portal</a>
+    <div class="nav-pill">Acceso restringido · Usuario autorizado</div>
+    <a class="btn-ghost btn" href="/operador/">← Volver a sedes</a>
+  </div>
+</header>
+<main class="page-main">
+<div class="menu-wrap">
+<div class="page-title">Sede Tacuari</div>
+<p class="page-note">Seleccioná una sala para ingresar al panel.</p>
+<article class="card" style="min-height:auto">
+<div class="card-header"><div class="card-title-inline">Salas</div></div>
+<div class="card-body">
+<div class="pill-col">
+<div class="pill-row"><a class="pill" href="/operador/tacuari/sala01/">sala01</a><span class="badge ok">✅</span></div>
+<div class="pill-row"><a class="pill" href="/operador/tacuari/sala03/">sala03</a><span class="badge ok">✅</span></div>
+<div class="pill-row"><a class="pill" href="/operador/tacuari/sala04/">sala04</a><span class="badge ok">✅</span></div>
+<div class="pill-row"><a class="pill" href="/operador/tacuari/sala06/">sala06</a><span class="badge ok">✅</span></div>
+<div class="pill-row"><a class="pill" href="/operador/tacuari/sala07/">sala07</a><span class="badge ok">✅</span></div>
+<div class="pill-row"><a class="pill" href="/operador/tacuari/sala08/">sala08</a><span class="badge ok">✅</span></div>
+<div class="pill-row"><a class="pill" href="/operador/tacuari/sala09/">sala09</a><span class="badge ok">✅</span></div>
+</div>
+</div>
+<div class="card-footer">
+<a class="btn-ghost btn" href="/operador/">← Volver</a>
+</div>
+</article>
+</div>
+</main>
+<footer class="ogaac-footer">
+  OGAAC · Uso interno · Modo Operador
+</footer>
+
+</body>
+</html>

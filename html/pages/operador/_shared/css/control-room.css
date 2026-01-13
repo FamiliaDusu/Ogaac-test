@@ -1,0 +1,244 @@
+/* ============================================================
+   OGAAC - Control Room
+   Layout:
+   - Izquierda grande: VIDEO
+   - Derecha arriba: AUDIENCIA
+   - Derecha abajo: CONTROL OBS
+   ============================================================ */
+
+.control-grid{
+  display:grid;
+  grid-template-columns: 2.3fr 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "video audiencia"
+    "video control";
+  gap:16px;
+  align-items:stretch;
+}
+
+/* áreas */
+.card-stream{ grid-area: video; }
+.card-audiencia{ grid-area: audiencia; }
+.card-obsright{ grid-area: control; }
+
+/* ================= VIDEO (columna izquierda alta completa) ================= */
+.card-stream{
+  display:flex;
+  flex-direction:column;
+  min-height: 720px;
+}
+
+.video-wrapper{
+  width:100%;
+  flex: 1;                 /* clave: ocupa alto disponible */
+  min-height: 420px;
+  background:#0b0f16;
+  border-radius:14px;
+  overflow:hidden;
+}
+
+.video-wrapper video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+/* ================= CABECERAS ================= */
+.panel-head{
+  padding:12px 14px;
+  border-bottom:1px solid rgba(0,0,0,.08);
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.panel-title{ font-weight:700; font-size:14px; }
+.panel-note{ font-size:12px; opacity:.75; }
+
+/* ================= AUDIENCIA ================= */
+.card-audiencia{
+  padding:0;
+  overflow:hidden;
+}
+
+.card-audiencia input,
+.card-audiencia select{
+  width:100%;
+  box-sizing:border-box;
+  padding:9px 10px;
+  border-radius:10px;
+  border:1px solid rgba(0,0,0,.12);
+  background:rgba(255,255,255,.96);
+  color:#111827;
+  font-size:13px;
+}
+
+/* ================= CONTROL OBS (derecha abajo) ================= */
+.card-obsright{
+  padding:0;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  min-height: 420px;
+}
+
+.panel-iframe{
+  width:100%;
+  border:0;
+  display:block;
+  background:#0e1117;
+  flex:1;
+  min-height: 420px;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1100px){
+  .control-grid{
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      "video"
+      "audiencia"
+      "control";
+  }
+
+  .card-stream{ min-height: auto; }
+  .video-wrapper{ min-height: 240px; }
+  .panel-iframe{ min-height: 600px; }
+}
+.stream-page .content-inner{
+  max-width: 2000px !important;
+  width: 100% !important;
+}
+.stream-page .content-inner{
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+}
+/* Video más protagonista */
+.card-stream{
+  padding: 8px 8px 10px 8px;
+}
+.video-wrapper{
+  min-height: 520px;
+}
+/* Control Room: empujar layout hacia la izquierda */
+.stream-page .content-inner{
+  margin-left: 0 !important;
+  margin-right: 8px !important;
+  padding-left: 16px !important;
+}
+/* ===== Control Room: subir todo hacia arriba ===== */
+
+/* achica el espacio del encabezado de página (título + volver) */
+.stream-page .page-subheader{
+  margin: 8px 0 10px !important;
+  padding: 0 !important;
+}
+
+/* reduce el padding superior general del main */
+.stream-page .page-main{
+  padding-top: 10px !important;
+}
+
+/* si tu contenedor interno tiene padding grande, lo achicamos */
+.stream-page .content-inner{
+  padding-top: 6px !important;
+}
+
+/* por si los h1/p del subheader tienen margen enorme */
+.stream-page .page-subheader h1{
+  margin: 0 0 6px 0 !important;
+}
+.stream-page .page-subheader p{
+  margin: 0 0 6px 0 !important;
+}
+.stream-page .content-inner{
+  margin: 0 !important;
+  padding-left: 6px !important;
+}
+
+.card-stream{
+  margin-left: -12px;
+}
+
+.control-grid{
+  grid-template-columns: 2.4fr 1fr;
+}
+
+/* =========================================================
+   CONTROL ROOM – layout operador (sin márgenes institucionales)
+   ========================================================= */
+
+/* Elimina centrado institucional */
+.stream-page .content-inner{
+  max-width: none !important;
+  width: 90% !important;
+  margin: 0 !important;
+  padding-left: 6px !important;
+  padding-right: 12px !important;
+}
+
+/* Grid: video MUY dominante */
+.stream-page .control-grid{
+  grid-template-columns: 2.2fr 1.8fr;
+}
+
+/* Card del video: que arranque bien a la izquierda */
+.stream-page .card-stream{
+  margin-left: 0px;
+  padding: 6px;
+}
+
+/* Que el video use TODO el alto disponible */
+.stream-page .video-wrapper{
+  flex: 1;
+  min-height: 520px;
+}
+/* =========================================================
+   HEADER CONTROL ROOM – título centrado
+   ========================================================= */
+
+.header-control-room{
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 10px 16px;
+}
+
+/* columnas */
+.header-left{ justify-self: start; }
+.header-center{
+  justify-self: center;
+  color: #ffffff;
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 700;
+  letter-spacing: .4px;
+}
+.header-center{
+  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+
+.header-right{ justify-self: end; }
+
+/* aseguramos color blanco en barra gris */
+.header-control-room,
+.header-control-room *{
+  color: #ffffff;
+}
+
+/* --- OBS API badge (pill) --- */
+.pill { 
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 10px; border-radius:999px;
+  font-size:12px; line-height:1; 
+  border:1px solid rgba(0,0,0,.12);
+  background:#fff;
+}
+.pill.status-ok { 
+  border-color: rgba(0,128,0,.35);
+}
+.pill.status-error { 
+  border-color: rgba(200,0,0,.35);
+}

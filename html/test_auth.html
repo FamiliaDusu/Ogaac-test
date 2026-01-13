@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test Auth Flow</title>
+</head>
+<body>
+  <h1>Test de Autenticación OGAAC</h1>
+  <div id="results"></div>
+  
+  <script>
+    const results = document.getElementById('results');
+    
+    function log(msg) {
+      console.log(msg);
+      results.innerHTML += `<p>${msg}</p>`;
+    }
+    
+    async function testFlow() {
+      try {
+        // 1. Login
+        log('1️⃣ Haciendo login...');
+        const loginRes = await fetch('http://127.0.0.1:8081/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: 'sdupero', password: 'Firefall2021' })
+        });
+        
+        const loginData = await loginRes.json();
+        log(`✅ Login OK: ${loginData.user} - ${loginData.role}`);
+        
+        // Guardar token
+        localStorage.setItem('ogaac_token', loginData.token);
+        log(`✅ Token guardado en localStorage`);
+        
+        // 2. Verificar /api/me
+        log('2️⃣ Verificando /api/me...');
+        const token = localStorage.getItem('ogaac_token');
+        const meRes = await fetch('http://127.0.0.1:8081/api/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const meData = await meRes.json();
+        log(`✅ /api/me OK: ${meData.user} - ${meData.role}`);
+        
+        // 3. Verificar panel admin
+        log('3️⃣ Verificando /api/admin/users...');
+        const adminRes = await fetch('http://127.0.0.1:8081/api/admin/users', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const adminData = await adminRes.json();
+        log(`✅ Panel admin OK: ${adminData.users.length} usuarios`);
+        
+        log('');
+        log('🎉 TODOS LOS TESTS PASARON');
+        log('Ahora puedes ir a: http://10.54.15.60:8080/operador/sedes.html');
+        
+      } catch (err) {
+        log(`❌ ERROR: ${err.message}`);
+        console.error(err);
+      }
+    }
+    
+    testFlow();
+  </script>
+</body>
+</html>

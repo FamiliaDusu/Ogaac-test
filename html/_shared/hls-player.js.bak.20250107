@@ -1,0 +1,274 @@
+(function (window) {
+  if (window.OGAAC_HLS) {
+    return;
+  }
+
+  const DEFAULT_TIMEOUT = 5000;
+
+  function buildHlsUrl(sede, sala) {
+    if (!sede || !sala) return "";
+    const normSede = String(sede).trim().toLowerCase();
+    const normSala = String(sala).trim().toLowerCase();
+    return `/hls/${normSede}/${normSala}/stream.m3u8`;
+  }
+
+  function cacheBust(url) {
+    if (!url) return "";
+    const token = `_ts=${Date.now()}`;
+    return url.includes("?") ? `${url}&${token}` : `${url}?${token}`;
+  }
+
+  function withTimeout(options = {}, timeoutMs = DEFAULT_TIMEOUT) {
+    const final = { ...options };
+    if (final.signal) {
+      return { options: final, cleanup: () => {} };
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    final.signal = controller.signal;
+    return {
+      options: final,
+      cleanup: () => clearTimeout(timer),
+    };
+  }
+
+  async function fetchWithTimeout(url, options = {}, timeoutMs = DEFAULT_TIMEOUT) {
+    const { options: finalOptions, cleanup } = withTimeout(options, timeoutMs);
+    try {
+      const res = await fetch(url, finalOptions);
+      cleanup();
+      return res;
+    } catch (err) {
+      cleanup();
+      throw err;
+    }
+  }
+
+  async function headHls(url, opts = {}) {
+    if (!url) throw new Error("URL HLS requerida");
+    const timeoutMs = opts.timeoutMs || 4000;
+    const result = { url };
+    try {
+      const res = await fetchWithTimeout(cacheBust(url), {
+        method: "HEAD",
+        cache: "no-store",
+      }, timeoutMs);
+      result.ok = res.ok;
+      result.status = res.status;
+      result.statusText = res.statusText;
+      result.contentType = res.headers.get("content-type") || "";
+      return result;
+    } catch (err) {
+      result.ok = false;
+      result.error = err.name === "AbortError" ? "timeout" : (err.message || "error HEAD");
+      return result;
+    }
+  }
+
+  async function probeHls(url, opts = {}) {
+    if (!url) throw new Error("URL HLS requerida");
+    const timeoutMs = opts.timeoutMs || DEFAULT_TIMEOUT;
+    const diag = {
+      ok: false,
+      url,
+      manifest: {},
+      segment: {},
+    };
+
+    let manifestRes;
+    try {
+      manifestRes = await fetchWithTimeout(cacheBust(url), {
+        method: "GET",
+        cache: "no-store",
+      }, timeoutMs);
+    } catch (err) {
+      diag.error = err.name === "AbortError" ? "Timeout al leer manifiesto" : (err.message || "Error al leer manifiesto");
+      return diag;
+    }
+
+    const manifestText = await manifestRes.text().catch(() => "");
+    const trimmed = manifestText.trimStart();
+    diag.manifest = {
+      status: manifestRes.status,
+      statusText: manifestRes.statusText,
+      contentType: manifestRes.headers.get("content-type") || "",
+      preview: trimmed.slice(0, 200).replace(/\s+/g, " "),
+    };
+
+    if (!manifestRes.ok) {
+      diag.error = `Manifiesto HTTP ${manifestRes.status}`;
+      return diag;
+    }
+    if (!trimmed.startsWith("#EXTM3U")) {
+      diag.error = "El manifiesto no comienza con #EXTM3U";
+      return diag;
+    }
+
+    const lines = manifestText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const firstSegment = lines.find((line) => !line.startsWith("#"));
+    if (!firstSegment) {
+      diag.error = "Playlist sin segmentos";
+      return diag;
+    }
+
+    const base = new URL(url, window.location.origin);
+    const segmentUrl = new URL(firstSegment, base);
+    diag.segment.url = segmentUrl.href.replace(window.location.origin, "");
+
+    let segmentRes;
+    try {
+      segmentRes = await fetchWithTimeout(cacheBust(segmentUrl.href), {
+        method: "HEAD",
+        cache: "no-store",
+      }, timeoutMs);
+    } catch (err) {
+      diag.error = err.name === "AbortError" ? "Timeout al validar segmento" : (err.message || "Error al validar segmento");
+      return diag;
+    }
+
+    diag.segment.status = segmentRes.status;
+    diag.segment.statusText = segmentRes.statusText;
+    diag.segment.contentType = segmentRes.headers.get("content-type") || "";
+    if (!segmentRes.ok) {
+      diag.error = `Segmento HTTP ${segmentRes.status}`;
+      return diag;
+    }
+
+    diag.ok = true;
+    return diag;
+  }
+
+  function sanitizeOverride(raw) {
+    if (!raw) return null;
+    try {
+      const url = new URL(raw, window.location.origin);
+      if (url.origin !== window.location.origin) return null;
+      return url.pathname + url.search;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function createPlayerController(options = {}) {
+    const {
+      videoEl,
+      sede,
+      sala,
+      urlOverride,
+      autoplay = true,
+      timeoutMs = DEFAULT_TIMEOUT,
+      onStatusChange,
+      onDiagnostics,
+    } = options;
+
+    if (!videoEl) {
+      throw new Error("videoEl requerido en createPlayerController");
+    }
+
+    const resolvedUrl = sanitizeOverride(urlOverride) || buildHlsUrl(sede, sala);
+    if (!resolvedUrl) {
+      throw new Error("No se pudo resolver la URL HLS");
+    }
+
+    let hlsInstance = null;
+
+    function emitStatus(mode, detail) {
+      if (typeof onStatusChange === "function") {
+        onStatusChange(mode, detail);
+      }
+    }
+
+    function emitDiag(diag) {
+      if (typeof onDiagnostics === "function") {
+        onDiagnostics(diag);
+      }
+    }
+
+    function destroy() {
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
+      videoEl.pause();
+      videoEl.removeAttribute("src");
+      videoEl.load();
+    }
+
+    function attemptAutoplay() {
+      if (!autoplay) return;
+      videoEl.play()
+        .then(() => emitStatus("live", "Reproduciendo"))
+        .catch(() => emitStatus("ready", "Autoplay bloqueado"));
+    }
+
+    async function startPlayback(playUrl) {
+      const cacheSafeUrl = cacheBust(playUrl);
+      if (window.Hls && window.Hls.isSupported()) {
+        destroy();
+        hlsInstance = new window.Hls({
+          enableWorker: true,
+          lowLatencyMode: false,
+          backBufferLength: 30,
+        });
+        hlsInstance.on(window.Hls.Events.ERROR, (_, data) => {
+          if (data && data.fatal) {
+            destroy();
+            emitStatus("error", `HLS fatal (${data.type || "desconocido"})`);
+          }
+        });
+        hlsInstance.loadSource(cacheSafeUrl);
+        hlsInstance.attachMedia(videoEl);
+        hlsInstance.on(window.Hls.Events.MANIFEST_PARSED, attemptAutoplay);
+      } else if (videoEl.canPlayType("application/vnd.apple.mpegurl")) {
+        destroy();
+        videoEl.src = cacheSafeUrl;
+        videoEl.addEventListener("loadedmetadata", attemptAutoplay, { once: true });
+        videoEl.addEventListener("error", () => emitStatus("error", "Error nativo al reproducir"), { once: true });
+      } else {
+        throw new Error("El navegador no soporta HLS");
+      }
+    }
+
+    async function refresh({ play = true } = {}) {
+      emitStatus("checking", "Validando HLS...");
+      let diag;
+      try {
+        diag = await probeHls(resolvedUrl, { timeoutMs });
+      } catch (err) {
+        diag = { ok: false, url: resolvedUrl, error: err.message || "Error al validar HLS" };
+      }
+
+      emitDiag(diag);
+      if (!diag.ok) {
+        destroy();
+        emitStatus("error", diag.error || "HLS no disponible");
+        throw new Error(diag.error || "HLS no disponible");
+      }
+
+      emitStatus("ready", "Playlist válida");
+      if (play) {
+        await startPlayback(resolvedUrl);
+      }
+      return diag;
+    }
+
+    function manualPlay() {
+      return videoEl.play();
+    }
+
+    return {
+      url: resolvedUrl,
+      refresh,
+      destroy,
+      manualPlay,
+    };
+  }
+
+  window.OGAAC_HLS = {
+    buildHlsUrl,
+    cacheBust,
+    headHls,
+    probeHls,
+    createPlayerController,
+  };
+})(window);

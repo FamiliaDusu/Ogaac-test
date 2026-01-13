@@ -1,0 +1,423 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Juzgado 14 - Audiencias grabadas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg-main: #0b0d12;
+      --bg-card: #141823;
+      --bg-header: #0a0c10;
+      --border-soft: #242938;
+      --accent: #1f6feb;
+      --accent-soft: #264a94;
+      --text-main: #f5f7fb;
+      --text-muted: #9ca3b5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top, #1b2340 0, #05060a 55%, #020308 100%);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(5, 7, 12, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-soft);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .nav-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .btn {
+      padding: 7px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      background: var(--accent-soft);
+      color: #e8edff;
+    }
+
+    .btn:hover {
+      background: var(--accent);
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      padding: 0;
+      min-height: 0;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+      width: 230px;
+      max-width: 260px;
+      background: rgba(6, 8, 14, 0.98);
+      border-right: 1px solid var(--border-soft);
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .sidebar-section-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .sidebar-group {
+      margin-bottom: 10px;
+    }
+
+    .sidebar-btn {
+      width: 100%;
+      text-align: left;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-soft);
+      background: #101320;
+      color: var(--text-main);
+      font-size: 13px;
+      margin-bottom: 6px;
+      cursor: default;
+    }
+
+    .sidebar-btn.active {
+      border-color: var(--accent);
+      background: #16203b;
+    }
+
+    .sidebar-link {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: left;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .sidebar-link:hover {
+      background: #2c7cf8;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* CONTENIDO PRINCIPAL */
+
+    .main-content {
+      flex: 1;
+      padding: 22px 20px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-width: 0;
+    }
+
+    .content-inner {
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .section-title h1 {
+      font-size: 18px;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .section-title small {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .estado {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .card {
+      background: rgba(13, 17, 27, 0.96);
+      border-radius: 10px;
+      padding: 14px 16px;
+      border: 1px solid rgba(64, 73, 107, 0.8);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    }
+
+    /* LISTA */
+
+    #lista {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      margin-top: 8px;
+    }
+
+    .fila-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(48, 56, 88, 0.9);
+      margin-bottom: 4px;
+    }
+
+    .fila {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      font-size: 13px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(32, 38, 65, 0.8);
+    }
+
+    .fila:last-child {
+      border-bottom: none;
+    }
+
+    .nombre {
+      word-break: break-all;
+      color: var(--text-main);
+    }
+
+    .actions {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .link-ver {
+      font-size: 12px;
+      color: #e8edff;
+      text-decoration: none;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--accent-soft);
+      background: #16203b;
+      display: inline-block;
+    }
+
+    .link-ver:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .btn-back {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--accent-soft);
+      background: transparent;
+      color: var(--accent);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-back:hover {
+      background: var(--accent-soft);
+      color: #e8edff;
+    }
+
+    footer {
+      text-align: center;
+      padding: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-soft);
+      background: #05060a;
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="brand">
+    <div class="brand-title">OGAAC - Audiencias grabadas</div>
+    <div class="brand-subtitle">Repositorio interno de videos - Juzgado 14</div>
+  </div>
+  <div style="display:flex; align-items:center; gap:8px;">
+    <div class="nav-pill">Acceso restringido - Usuario autorizado</div>
+    <button class="btn" type="button" onclick="window.location.href='login.html'">Cerrar sesion</button>
+  </div>
+</header>
+
+<main>
+  <aside class="sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-section-title">Navegacion</div>
+      <button class="sidebar-btn active">Juzgado 14<small>Audiencias grabadas</small></button>
+    </div>
+
+    <div class="sidebar-group">
+      <div class="sidebar-section-title">Volver</div>
+      <a class="sidebar-link" href="audiencias.html">Portal de juzgados</a>
+    </div>
+
+    <div class="sidebar-footer">Uso interno OGAAC - No compartir credenciales.</div>
+  </aside>
+
+  <section class="main-content">
+    <div class="content-inner">
+      <div class="section-title">
+        <h1>Juzgado 14 - Audiencias grabadas</h1>
+        <small>Listado automatico de archivos en el servidor</small>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn-back" type="button" onclick="window.location.href='audiencias.html'">
+          <- Volver al portal de audiencias
+        </button>
+        <span id="estado" class="estado">Cargando lista de audiencias...</span>
+      </div>
+
+      <div class="card">
+        <div class="fila-header">
+          <div>Nombre de archivo</div>
+          <div class="actions">Accion</div>
+        </div>
+
+        <ul id="lista"></ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  OGAAC - Uso interno - Sede Suipacha - Servidor de audiencias grabadas
+</footer>
+
+<script>
+  const lista = document.getElementById('lista');
+  const estado = document.getElementById('estado');
+
+  fetch('/audiencias/Juzgado14/')
+    .then(res => res.text())
+    .then(html => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      let links = [...doc.querySelectorAll('a')]
+        .map(a => a.getAttribute('href'))
+        .filter(href => {
+          if (!href) return false;
+          if (href === '../') return false;
+          href = href.toLowerCase();
+          return href.endsWith('.mp4') || href.endsWith('.mkv') || href.endsWith('.webm');
+        });
+
+      if (links.length === 0) {
+        estado.textContent = 'No hay audiencias cargadas para este juzgado.';
+        return;
+      }
+
+      estado.textContent = 'Audiencias encontradas: ' + links.length;
+      lista.innerHTML = '';
+
+      links.forEach(href => {
+        let fullPath = href.startsWith('/audiencias')
+          ? href
+          : '/audiencias/Juzgado14/' + href;
+
+        let label;
+        try {
+          label = decodeURIComponent(href.split('/').pop());
+        } catch {
+          label = href;
+        }
+
+        const li = document.createElement('li');
+        li.className = 'fila';
+
+        const span = document.createElement('span');
+        span.className = 'nombre';
+        span.textContent = label;
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const a = document.createElement('a');
+        a.textContent = 'Ver';
+        a.href = fullPath;
+        a.target = '_blank';
+        a.className = 'link-ver';
+
+        actions.appendChild(a);
+        li.appendChild(span);
+        li.appendChild(actions);
+        lista.appendChild(li);
+      });
+    })
+    .catch(() => estado.textContent = 'Error al cargar la lista.');
+</script>
+
+</body>
+</html>
+

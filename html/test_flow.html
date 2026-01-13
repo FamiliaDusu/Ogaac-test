@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Flujo de Autenticación</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .section h3 {
+      margin-top: 0;
+    }
+    button {
+      padding: 8px 15px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    pre {
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 3px;
+      overflow-x: auto;
+    }
+    .success { color: green; }
+    .error { color: red; }
+    .info { color: blue; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Test Flujo de Autenticación OGAAC</h1>
+  
+  <div class="section">
+    <h3>1. Estado del Token</h3>
+    <button onclick="checkToken()">Verificar Token en localStorage</button>
+    <pre id="tokenStatus">Presioná el botón para verificar...</pre>
+  </div>
+
+  <div class="section">
+    <h3>2. Test Login</h3>
+    <input type="text" id="username" placeholder="usuario" value="sdupero" />
+    <input type="password" id="password" placeholder="contraseña" value="Firefall2021" />
+    <button onclick="testLogin()">Hacer Login</button>
+    <pre id="loginResult">Resultado del login aparecerá aquí...</pre>
+  </div>
+
+  <div class="section">
+    <h3>3. Test /api/me</h3>
+    <button onclick="testMe()">Llamar /api/me</button>
+    <pre id="meResult">Resultado de /api/me aparecerá aquí...</pre>
+  </div>
+
+  <div class="section">
+    <h3>4. Navegación</h3>
+    <button onclick="window.location.href='/operador/sedes.html'">Ir a /operador/sedes.html</button>
+    <button onclick="window.location.href='/index.html'">Ir a /index.html</button>
+    <button onclick="clearToken()">Limpiar Token</button>
+  </div>
+
+  <div class="section">
+    <h3>Console Logs</h3>
+    <pre id="logs">Los logs aparecerán aquí...</pre>
+  </div>
+
+  <script>
+    const logsEl = document.getElementById('logs');
+    
+    function log(msg, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue';
+      logsEl.innerHTML += `<span style="color:${color}">[${timestamp}] ${msg}</span>\n`;
+      console.log(`[${timestamp}] ${msg}`);
+    }
+
+    function checkToken() {
+      const token = localStorage.getItem('ogaac_token');
+      const el = document.getElementById('tokenStatus');
+      
+      if (token) {
+        el.innerHTML = `<span class="success">✓ Token encontrado:</span>\n${token.substring(0, 50)}...`;
+        log('Token encontrado en localStorage', 'success');
+      } else {
+        el.innerHTML = '<span class="error">✗ No hay token en localStorage</span>';
+        log('No hay token en localStorage', 'error');
+      }
+    }
+
+    async function testLogin() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const el = document.getElementById('loginResult');
+      
+      log(`Intentando login con usuario: ${username}`);
+      
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok && data.token) {
+          localStorage.setItem('ogaac_token', data.token);
+          el.innerHTML = `<span class="success">✓ Login exitoso!</span>\n${JSON.stringify(data, null, 2)}`;
+          log('Login exitoso, token guardado', 'success');
+        } else {
+          el.innerHTML = `<span class="error">✗ Login falló:</span>\n${JSON.stringify(data, null, 2)}`;
+          log('Login falló: ' + JSON.stringify(data), 'error');
+        }
+      } catch (err) {
+        el.innerHTML = `<span class="error">✗ Error:</span>\n${err.message}`;
+        log('Error en login: ' + err.message, 'error');
+      }
+    }
+
+    async function testMe() {
+      const el = document.getElementById('meResult');
+      const token = localStorage.getItem('ogaac_token');
+      
+      if (!token) {
+        el.innerHTML = '<span class="error">✗ No hay token. Hace login primero.</span>';
+        log('No hay token para llamar /api/me', 'error');
+        return;
+      }
+      
+      log('Llamando /api/me con token...');
+      
+      try {
+        const res = await fetch('/api/me', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+          el.innerHTML = `<span class="success">✓ /api/me exitoso!</span>\n${JSON.stringify(data, null, 2)}`;
+          log('/api/me exitoso', 'success');
+        } else {
+          el.innerHTML = `<span class="error">✗ /api/me falló (${res.status}):</span>\n${JSON.stringify(data, null, 2)}`;
+          log(`/api/me falló con status ${res.status}`, 'error');
+          
+          if (res.status === 401) {
+            log('Token inválido o expirado', 'error');
+          }
+        }
+      } catch (err) {
+        el.innerHTML = `<span class="error">✗ Error:</span>\n${err.message}`;
+        log('Error en /api/me: ' + err.message, 'error');
+      }
+    }
+
+    function clearToken() {
+      localStorage.removeItem('ogaac_token');
+      log('Token eliminado de localStorage', 'info');
+      checkToken();
+    }
+
+    // Auto-check al cargar
+    window.addEventListener('DOMContentLoaded', () => {
+      log('Página cargada');
+      checkToken();
+    });
+  </script>
+</body>
+</html>

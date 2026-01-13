@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Juzgado N° 21 Penal, Contravencional y de Faltas · Audiencias grabadas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- CSS institucional -->
+  <link rel="stylesheet" href="ogaac.css" />
+</head>
+
+<body class="page juz-page">
+
+  <!-- HEADER -->
+  <header class="ogaac-header">
+    <div class="ogaac-brand">
+      <div class="ogaac-brand-title">OGAAC · Audiencias grabadas</div>
+      <div class="ogaac-brand-subtitle">
+        Repositorio interno de videos · Juzgado N° 21 Penal, Contravencional y de Faltas
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="nav-pill">Acceso restringido · Usuario autorizado</div>
+      <button class="btn-logout" type="button" onclick="ogaacLogout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <!-- LAYOUT PRINCIPAL -->
+  <main class="page-main juz-main">
+    <div class="juz-page-layout">
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-group">
+          <div class="sidebar-section-title">Navegación</div>
+
+          <button class="sidebar-btn active" type="button">
+            Juzgado N° 21 Penal, Contravencional y de Faltas
+            <small>Audiencias grabadas</small>
+          </button>
+        </div>
+
+        <div class="sidebar-group">
+          <div class="sidebar-section-title">Volver</div>
+          <a class="sidebar-link" href="audiencias.html">
+            ← Portal de juzgados
+          </a>
+        </div>
+
+        <div class="sidebar-footer">
+          Uso interno OGAAC · No compartir credenciales.
+        </div>
+      </aside>
+
+      <!-- CONTENIDO PRINCIPAL -->
+      <section class="main-content">
+        <div class="content-inner">
+
+          <div class="section-title">
+            <h2>Juzgado N° 21 Penal, Contravencional y de Faltas · Audiencias grabadas</h2>
+          </div>
+
+          <div class="juz-toolbar">
+            <button class="btn-back" type="button" onclick="window.location.href='audiencias.html'">
+              ← Volver al portal de audiencias
+            </button>
+
+            <span id="estado" class="estado">Cargando lista de audiencias...</span>
+          </div>
+
+          <!-- TARJETA DE ARCHIVOS -->
+          <div class="card file-card">
+
+            <div class="fila-header">
+              <div>Nombre de archivo</div>
+              <div class="actions">Acción</div>
+            </div>
+
+            <ul id="lista"></ul>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="ogaac-footer">
+    OGAAC · Uso interno · Sede Suipacha · Servidor de audiencias grabadas
+  </footer>
+
+  <!-- LISTADO DE ARCHIVOS (v2 usando /api/juzgado21) -->
+<script>
+  const lista = document.getElementById('lista');
+  const estado = document.getElementById('estado');
+
+  async function cargarAudienciasJuzgado21() {
+    try {
+      const token = localStorage.getItem('ogaac_token');
+      if (!token) {
+        estado.textContent = 'Sesión no válida. Redirigiendo a login...';
+        window.location.href = 'login.html';
+        return;
+      }
+
+      estado.textContent = 'Cargando lista de audiencias...';
+
+      // Enviar token al backend
+      const res = await fetch('/api/juzgado21', {
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        console.error('Error /api/juzgado21:', data);
+        estado.textContent = 'Error al cargar las audiencias.';
+        return;
+      }
+
+      const archivos = data.archivos || [];
+
+      if (!archivos.length) {
+        estado.textContent = 'No hay audiencias cargadas para este juzgado.';
+        return;
+      }
+
+      estado.textContent = 'Audiencias encontradas: ' + archivos.length;
+      lista.innerHTML = '';
+
+      archivos.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'fila';
+
+        const span = document.createElement('span');
+        span.className = 'nombre';
+        span.textContent = item.nombre;
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const link = document.createElement('a');
+        link.textContent = 'Ver';
+
+        // item.url ya viene como /api/video?file=...
+        // No agregamos más token en la URL, la cookie ogaac_token se manda sola
+        link.href = item.url;
+        link.target = '_blank';
+        link.className = 'link-ver';
+
+        actions.appendChild(link);
+        li.appendChild(span);
+        li.appendChild(actions);
+        lista.appendChild(li);
+      });
+    } catch (e) {
+      console.error(e);
+      estado.textContent = 'Error al cargar la lista.';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', cargarAudienciasJuzgado21);
+</script>
+
+
+  <!-- TOKEN CHECK -->
+  <script>
+    (async function () {
+      const token = localStorage.getItem("ogaac_token");
+
+      if (!token) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/check", {
+          method: "GET",
+          headers: { "Authorization": "Bearer " + token }
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data.ok) {
+          localStorage.removeItem("ogaac_token");
+          window.location.href = "login.html";
+        }
+
+      } catch (err) {
+        localStorage.removeItem("ogaac_token");
+        window.location.href = "login.html";
+      }
+    })();
+  </script>
+
+  <!-- LOGOUT -->
+  <script>
+    function ogaacLogout() {
+      localStorage.removeItem("ogaac_token");
+      sessionStorage.clear();
+      window.location.replace("login.html");
+    }
+  </script>
+
+</body>
+</html>

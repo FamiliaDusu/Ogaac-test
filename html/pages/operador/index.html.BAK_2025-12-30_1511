@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>OGAAC · Operador</title>
+  <link rel="stylesheet" href="/ogaac.css"/>
+  <style>
+/* ===== Menú operador (mínimo, institucional) ===== */
+.menu-wrap{max-width:1200px;margin:0 auto}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.menu-kpis{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.badge{
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid rgba(0,0,0,.12);
+  background:#fff;
+  color: #303030;
+}
+.badge.ok{ background: rgba(63,191,107,.12); }
+.badge.todo{ background: rgba(242,95,92,.10); }
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(0,0,0,.12);
+  background:#fff;
+  text-decoration:none;
+  color: var(--text-main);
+}
+.pill:hover{ background: rgba(0,0,0,.04); }
+.pill-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pill-col{display:grid;gap:10px}
+.page-title{
+  margin:0 0 12px 0;
+  font-size:20px;
+  font-weight:600;
+}
+.page-note{ margin:0 0 16px 0; color: var(--text-muted); }
+.top-actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+</style>
+</head>
+<body class="page">
+<header class="ogaac-header">
+  <div class="ogaac-brand">
+    <div class="ogaac-brand-title">OGAAC · Operador</div>
+    <div class="ogaac-brand-subtitle">Seleccionar sede</div>
+  </div>
+  <div class="top-actions">
+    <a class="btn-ghost btn" href="/index.html">← Volver al Portal</a>
+    <div class="nav-pill">Acceso restringido · Usuario autorizado</div>
+    
+  </div>
+</header>
+<main class="page-main">
+<div class="menu-wrap">
+<div class="page-title">Modo Operador</div>
+<p class="page-note">Elegí una sede para ver sus salas. (✅ configurada · ⏳ pendiente)</p>
+<div class="menu-grid">
+<article class="card">
+<div class="card-header"><div class="card-title-inline">Sede Balbin</div></div>
+<div class="card-body">
+<div class="menu-kpis"><span class="badge ok">✅ 0</span><span class="badge todo">⏳ 3</span><span class="badge">3 salas</span></div>
+</div>
+<div class="card-footer">
+<a class="btn btn-block" href="/operador/balbin/">Ingresar a Balbin</a>
+</div>
+</article>
+<article class="card">
+<div class="card-header"><div class="card-title-inline">Sede Libertad</div></div>
+<div class="card-body">
+<div class="menu-kpis"><span class="badge ok">✅ 0</span><span class="badge todo">⏳ 2</span><span class="badge">2 salas</span></div>
+</div>
+<div class="card-footer">
+<a class="btn btn-block" href="/operador/libertad/">Ingresar a Libertad</a>
+</div>
+</article>
+<article class="card">
+<div class="card-header"><div class="card-title-inline">Sede Suipacha</div></div>
+<div class="card-body">
+<div class="menu-kpis"><span class="badge ok">✅ 9</span><span class="badge todo">⏳ 1</span><span class="badge">10 salas</span></div>
+</div>
+<div class="card-footer">
+<a class="btn btn-block" href="/operador/suipacha/">Ingresar a Suipacha</a>
+</div>
+</article>
+<article class="card">
+<div class="card-header"><div class="card-title-inline">Sede Tacuari</div></div>
+<div class="card-body">
+<div class="menu-kpis"><span class="badge ok">✅ 7</span><span class="badge todo">⏳ 0</span><span class="badge">7 salas</span></div>
+</div>
+<div class="card-footer">
+<a class="btn btn-block" href="/operador/tacuari/">Ingresar a Tacuari</a>
+</div>
+</article>
+<article class="card">
+<div class="card-header"><div class="card-title-inline">Sede Yrigoyen</div></div>
+<div class="card-body">
+<div class="menu-kpis"><span class="badge ok">✅ 2</span><span class="badge todo">⏳ 0</span><span class="badge">2 salas</span></div>
+</div>
+<div class="card-footer">
+<a class="btn btn-block" href="/operador/yrigoyen/">Ingresar a Yrigoyen</a>
+</div>
+</article>
+</div>
+</div>
+</main>
+<footer class="ogaac-footer">
+  OGAAC · Uso interno · Modo Operador
+</footer>
+
+</body>
+</html>
