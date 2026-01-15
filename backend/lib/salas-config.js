@@ -1,10 +1,70 @@
+/**
+ * OGAAC - Configuración de Salas
+ * Modo híbrido: primero intenta PostgreSQL, fallback a JSON
+ */
+
 const fs = require("fs");
 const path = require("path");
 
+// Archivos JSON legacy (fallback)
 const SALAS_PUBLIC_FILE = path.join(__dirname, "..", "config", "salas.json");
 const SALAS_SECRETS_FILE = path.join(__dirname, "..", "config", "salas.secrets.json");
 
 const SECRET_KEYWORDS = ["password", "pass", "secret", "token", "rtsp", "rtspurl"];
+
+// Intentar cargar módulo DB (opcional)
+let db = null;
+try {
+  db = require("./db");
+} catch (e) {
+  console.warn("[salas-config] Módulo db.js no disponible, usando solo JSON");
+}
+
+// Cache para DB queries
+let dbCache = null;
+let dbCacheTime = 0;
+const DB_CACHE_TTL = 60000; // 60 segundos
+
+/**
+ * Obtener salas desde PostgreSQL
+ */
+async function getSalasFromDB(options = {}) {
+  const { traceId = null } = options;
+
+  if (!db) return null;
+
+  const now = Date.now();
+  if (dbCache && (now - dbCacheTime) < DB_CACHE_TTL) {
+    return dbCache;
+  }
+
+  try {
+    const salas = await db.getSalas();
+
+    // Convertir array a estructura de árbol {sede: {sala: config}}
+    const tree = {};
+    for (const s of salas) {
+      if (!tree[s.sede]) tree[s.sede] = {};
+
+      tree[s.sede][s.sala] = {
+        ws: s.dvr_ip ? `ws://${s.dvr_ip}:${s.obs_websocket_port || 4455}` : null,
+        enabled: !!s.dvr_ip,
+        needsSecrets: true,
+        dvr_hostname: s.dvr_hostname,
+        dvr_ip: s.dvr_ip,
+        fromDB: true
+      };
+    }
+
+    dbCache = tree;
+    dbCacheTime = now;
+    console.log(`[salas-config] Cargadas ${salas.length} salas desde PostgreSQL`);
+    return tree;
+  } catch (e) {
+    console.error("[salas-config] Error leyendo DB:", e.message);
+    return null;
+  }
+}
 
 function readJsonSafe(filePath, options = {}) {
   const { traceId = null, optional = false } = options;
@@ -119,21 +179,35 @@ function extractRtspUrl(config = {}) {
   return null;
 }
 
+/**
+ * Construye snapshot de salas (modo síncrono con cache de DB)
+ */
 function buildSalasSnapshot(options = {}) {
   const traceId = options.traceId || null;
   const warnings = [];
 
-  const publicRes = readJsonSafe(SALAS_PUBLIC_FILE, { traceId });
-  if (!publicRes.ok) {
-    return { ok: false, traceId, error: publicRes.error };
+  // Usar cache de DB si está disponible
+  let publicTree = null;
+  let sourceType = "json";
+
+  if (dbCache) {
+    publicTree = dbCache;
+    sourceType = "db";
+  } else {
+    // Fallback a JSON
+    const publicRes = readJsonSafe(SALAS_PUBLIC_FILE, { traceId });
+    if (!publicRes.ok) {
+      return { ok: false, traceId, error: publicRes.error };
+    }
+    publicTree = isPlainObject(publicRes.data) ? publicRes.data : {};
   }
 
+  // Cargar secrets (siempre desde JSON)
   const secretsRes = readJsonSafe(SALAS_SECRETS_FILE, { traceId, optional: true });
   if (!secretsRes.ok) {
     return { ok: false, traceId, error: secretsRes.error };
   }
 
-  const publicTree = isPlainObject(publicRes.data) ? publicRes.data : {};
   const secretsTree = isPlainObject(secretsRes.data) ? secretsRes.data : {};
   const mergedTree = {};
   const publicList = [];
@@ -207,6 +281,7 @@ function buildSalasSnapshot(options = {}) {
     missingSecrets,
     duplicateObsWs,
     duplicateRtsp,
+    sourceType, // "db" o "json"
   };
 
   return {
@@ -249,6 +324,23 @@ function collectDuplicates(fullById, extractor, code, warnings) {
   return duplicates;
 }
 
+/**
+ * Inicializar cache desde DB (llamar al inicio del server)
+ */
+async function initFromDB() {
+  if (!db) return false;
+  const tree = await getSalasFromDB();
+  return !!tree;
+}
+
+/**
+ * Invalidar cache (para recargar desde DB)
+ */
+function invalidateCache() {
+  dbCache = null;
+  dbCacheTime = 0;
+}
+
 module.exports = {
   SALAS_PUBLIC_FILE,
   SALAS_SECRETS_FILE,
@@ -256,4 +348,7 @@ module.exports = {
   buildSalasSnapshot,
   extractWsEndpoint,
   extractRtspUrl,
+  initFromDB,
+  invalidateCache,
+  getSalasFromDB,
 };

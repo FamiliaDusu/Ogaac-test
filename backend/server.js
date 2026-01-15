@@ -9,7 +9,7 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const fsp = require("fs").promises;
 const path = require("path");
-const { buildSalasSnapshot } = require("./lib/salas-config");
+const { buildSalasSnapshot, initFromDB } = require("./lib/salas-config");
 const usersManager = require("./lib/users-manager");
 const { auditLog, readAuditLog, listAuditDates } = require("./lib/audit");
 
@@ -353,12 +353,12 @@ async function withOBS(fn) {
     const result = await fn(obs);
     try {
       await obs.disconnect();
-    } catch (_) {}
+    } catch (_) { }
     return { ok: true, ...result };
   } catch (error) {
     try {
       await obs.disconnect();
-    } catch (_) {}
+    } catch (_) { }
     return {
       ok: false,
       error: error?.message || String(error),
@@ -433,7 +433,7 @@ async function obsCall(obsCfg, fn) {
   } catch (e) {
     // si algo falla, forzamos reconexión en próxima request
     entry.connected = false;
-    try { await entry.obs.disconnect(); } catch (_) {}
+    try { await entry.obs.disconnect(); } catch (_) { }
     throw e;
   }
 }
@@ -443,7 +443,7 @@ setInterval(async () => {
   const now = Date.now();
   for (const [key, entry] of __obsPool.entries()) {
     if (now - entry.lastUsed > 30 * 60 * 1000) {
-      try { await entry.obs.disconnect(); } catch (_) {}
+      try { await entry.obs.disconnect(); } catch (_) { }
       __obsPool.delete(key);
     }
   }
@@ -517,8 +517,8 @@ async function startSala10Record() {
     try {
       await obs.call("StartRecord");
 
-          // esperar un toque para que OBS empiece a escribir
-          await new Promise(r => setTimeout(r, 500));
+      // esperar un toque para que OBS empiece a escribir
+      await new Promise(r => setTimeout(r, 500));
     } catch (e) {
       const msg = String(e?.message || e || "");
       if (/already|in progress|active/i.test(msg)) {
@@ -857,7 +857,7 @@ const server = http.createServer(async (req, res) => {
     try {
       const { execSync } = require("child_process");
       gitRev = String(execSync("git rev-parse --short HEAD", { cwd: process.cwd() })).trim();
-    } catch (_) {}
+    } catch (_) { }
 
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify({
@@ -871,19 +871,19 @@ const server = http.createServer(async (req, res) => {
     }));
     return;
 
-  // ------------------------------
-  // DEBUG: headers que llegan al backend (TEMPORAL)
-  // ------------------------------
-  if (method === "GET" && url === "/api/debug/headers") {
-    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
-    res.end(JSON.stringify({
-      ok: true,
-      method,
-      url: urlFull,
-      headers: req.headers,
-    }, null, 2));
-    return;
-  }
+    // ------------------------------
+    // DEBUG: headers que llegan al backend (TEMPORAL)
+    // ------------------------------
+    if (method === "GET" && url === "/api/debug/headers") {
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+      res.end(JSON.stringify({
+        ok: true,
+        method,
+        url: urlFull,
+        headers: req.headers,
+      }, null, 2));
+      return;
+    }
 
   }
 
@@ -916,7 +916,7 @@ const server = http.createServer(async (req, res) => {
     res.end(JSON.stringify(obj));
   }
 
-  
+
   // -----------------------------------------------------------
   // traceId + helpers de error/log para router dinámico
   // -----------------------------------------------------------
@@ -951,7 +951,7 @@ const server = http.createServer(async (req, res) => {
     else console.log("[DYN]", msg, base);
   }
 
-function __parseDynObsRoute(pathOnly) {
+  function __parseDynObsRoute(pathOnly) {
     const parts = pathOnly.split("/").filter(Boolean); // ["api","obs",":sede",":sala",...]
     if (parts.length < 4) return null;
     if (parts[0] !== "api" || parts[1] !== "obs") return null;
@@ -963,92 +963,92 @@ function __parseDynObsRoute(pathOnly) {
     return { sede, sala, rest: rest === "/" ? "" : rest };
   }
 
-  
-    // -----------------------------------------------------------
-    // GET /api/obs/config  (lista global de salas configuradas)
-    // -----------------------------------------------------------
-    if (__method === "GET" && __url === "/api/obs/config") {
-      const payload = requireAuth(req);
-      if (!payload) {
-        __sendJson(403, {
-          ok: false,
-          code: "AUTH_DENIED",
-          message: "Acceso denegado",
-          traceId: __traceId,
-        });
-        return;
-      }
 
-      const snapshot = buildSalasSnapshot({ traceId: __traceId });
-      if (!snapshot.ok) {
-        __sendJson(500, {
-          ok: false,
-          code: "CONFIG_LOAD_FAILED",
-          traceId: __traceId,
-          error: snapshot.error,
-        });
-        return;
-      }
-
-      // SCOPE: Obtener scope del usuario y filtrar salas
-      let userScope = null;
-      try {
-        const userFromFile = await usersManager.getUser(payload.username);
-        if (userFromFile && userFromFile.scope) {
-          userScope = userFromFile.scope;
-        }
-      } catch (err) {
-        console.error("[/api/obs/config] Error obteniendo scope:", err);
-      }
-
-      // Filtrar salas según scope del usuario (null = todas)
-      const filteredSalas = filterSalasByScope(snapshot.publicList, userScope);
-
-      __sendJson(200, {
-        ok: true,
+  // -----------------------------------------------------------
+  // GET /api/obs/config  (lista global de salas configuradas)
+  // -----------------------------------------------------------
+  if (__method === "GET" && __url === "/api/obs/config") {
+    const payload = requireAuth(req);
+    if (!payload) {
+      __sendJson(403, {
+        ok: false,
+        code: "AUTH_DENIED",
+        message: "Acceso denegado",
         traceId: __traceId,
-        counts: snapshot.counts,
-        warnings: snapshot.warnings,
-        salas: filteredSalas,
       });
       return;
     }
 
-    if (__method === "GET" && __url === "/api/obs/config/full") {
-      const payload = requireAuth(req);
-      const isAdmin = payload && String(payload.role || "").toLowerCase() === "admin";
-      const local = isLocalRequest(req);
-
-      if (!isAdmin && !local) {
-        __sendJson(403, {
-          ok: false,
-          code: "ADMIN_ONLY",
-          message: "Solo disponible para admin o localhost",
-          traceId: __traceId,
-        });
-        return;
-      }
-
-      const snapshot = buildSalasSnapshot({ traceId: __traceId });
-      if (!snapshot.ok) {
-        __sendJson(500, {
-          ok: false,
-          code: "CONFIG_LOAD_FAILED",
-          traceId: __traceId,
-          error: snapshot.error,
-        });
-        return;
-      }
-
-      __sendJson(200, {
-        ok: true,
+    const snapshot = buildSalasSnapshot({ traceId: __traceId });
+    if (!snapshot.ok) {
+      __sendJson(500, {
+        ok: false,
+        code: "CONFIG_LOAD_FAILED",
         traceId: __traceId,
-        counts: snapshot.counts,
-        warnings: snapshot.warnings,
-        salas: snapshot.fullList,
+        error: snapshot.error,
       });
       return;
     }
+
+    // SCOPE: Obtener scope del usuario y filtrar salas
+    let userScope = null;
+    try {
+      const userFromFile = await usersManager.getUser(payload.username);
+      if (userFromFile && userFromFile.scope) {
+        userScope = userFromFile.scope;
+      }
+    } catch (err) {
+      console.error("[/api/obs/config] Error obteniendo scope:", err);
+    }
+
+    // Filtrar salas según scope del usuario (null = todas)
+    const filteredSalas = filterSalasByScope(snapshot.publicList, userScope);
+
+    __sendJson(200, {
+      ok: true,
+      traceId: __traceId,
+      counts: snapshot.counts,
+      warnings: snapshot.warnings,
+      salas: filteredSalas,
+    });
+    return;
+  }
+
+  if (__method === "GET" && __url === "/api/obs/config/full") {
+    const payload = requireAuth(req);
+    const isAdmin = payload && String(payload.role || "").toLowerCase() === "admin";
+    const local = isLocalRequest(req);
+
+    if (!isAdmin && !local) {
+      __sendJson(403, {
+        ok: false,
+        code: "ADMIN_ONLY",
+        message: "Solo disponible para admin o localhost",
+        traceId: __traceId,
+      });
+      return;
+    }
+
+    const snapshot = buildSalasSnapshot({ traceId: __traceId });
+    if (!snapshot.ok) {
+      __sendJson(500, {
+        ok: false,
+        code: "CONFIG_LOAD_FAILED",
+        traceId: __traceId,
+        error: snapshot.error,
+      });
+      return;
+    }
+
+    __sendJson(200, {
+      ok: true,
+      traceId: __traceId,
+      counts: snapshot.counts,
+      warnings: snapshot.warnings,
+      salas: snapshot.fullList,
+    });
+    return;
+  }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RUTAS DINÁMICAS OBS: /api/obs/:sede/:sala/*
@@ -1097,7 +1097,7 @@ function __parseDynObsRoute(pathOnly) {
       });
       return;
     }
-  const obsCfg = (__cfgSnapshot.mergedTree[__dyn.sede] || {})[__dyn.sala];
+    const obsCfg = (__cfgSnapshot.mergedTree[__dyn.sede] || {})[__dyn.sala];
     if (!obsCfg) {
       __sendErr(404, "SALA_NOT_CONFIGURED", { error: "Sala no configurada en config/salas.json" });
       return;
@@ -1205,7 +1205,7 @@ function __parseDynObsRoute(pathOnly) {
       }
 
       // ---- Record ----
-                  if (__method === "POST" && __dyn.rest === "/record/start") {
+      if (__method === "POST" && __dyn.rest === "/record/start") {
         const op = __getRecOp(__dyn.sede, __dyn.sala);
 
         // Si ya hay operación en curso, devolvemos 202
@@ -1232,7 +1232,7 @@ function __parseDynObsRoute(pathOnly) {
         try {
           const out = await obsCall(obsCfg, async (obs) => {
             // Intentar iniciar (si ya está grabando, OBS puede fallar o ignorar)
-            try { await obs.call("StartRecord"); } catch (_) {}
+            try { await obs.call("StartRecord"); } catch (_) { }
 
             // Esperar un toque y consultar estado
             await new Promise(r => setTimeout(r, 500));
@@ -1273,7 +1273,7 @@ function __parseDynObsRoute(pathOnly) {
         }
       }
 
-                  if (__method === "POST" && __dyn.rest === "/record/stop") {
+      if (__method === "POST" && __dyn.rest === "/record/stop") {
         const op = __getRecOp(__dyn.sede, __dyn.sala);
 
         if (op.state === "stopping") {
@@ -1359,7 +1359,7 @@ function __parseDynObsRoute(pathOnly) {
         }
       }
 
-                  if (__method === "GET" && __dyn.rest === "/record/status") {
+      if (__method === "GET" && __dyn.rest === "/record/status") {
         const op = __getRecOp(__dyn.sede, __dyn.sala);
 
         try {
@@ -1387,7 +1387,7 @@ function __parseDynObsRoute(pathOnly) {
           return;
         }
       }
-if (__method === "POST" && __dyn.rest === "/record/resume") {
+      if (__method === "POST" && __dyn.rest === "/record/resume") {
         const op = __getRecOp(__dyn.sede, __dyn.sala);
 
         try {
@@ -1448,7 +1448,7 @@ if (__method === "POST" && __dyn.rest === "/record/resume") {
         __sendJson(200, { ok: true, ...out });
         return;
       }
-      
+
       // ---- State (stream + record + op)
       if (__method === "GET" && __dyn.rest === "/state") {
         const op = __getRecOp(__dyn.sede, __dyn.sala);
@@ -1508,9 +1508,9 @@ if (__method === "POST" && __dyn.rest === "/record/resume") {
         return;
       }
 
-__sendErr(404, "DYN_ROUTE_NOT_IMPLEMENTED", { error: "Ruta dinámica no implementada" });
+      __sendErr(404, "DYN_ROUTE_NOT_IMPLEMENTED", { error: "Ruta dinámica no implementada" });
       return;
-     } catch (e) {
+    } catch (e) {
       __logDyn("error", "dyn handler failed", { error: String(e?.message || e) });
       __sendErr(500, "DYN_HANDLER_FAILED", { error: String(e?.message || e) });
       return;
@@ -1963,252 +1963,252 @@ __sendErr(404, "DYN_ROUTE_NOT_IMPLEMENTED", { error: "Ruta dinámica no implemen
   }
 
   if (false) {
-  // ---- Stream ----
-  if (method === "GET" && url === "/api/obs/sala10/status")
-    return sendJson(res, 200, await getSala10StreamStatus());
+    // ---- Stream ----
+    if (method === "GET" && url === "/api/obs/sala10/status")
+      return sendJson(res, 200, await getSala10StreamStatus());
 
-  if (method === "POST" && url === "/api/obs/sala10/stream/start")
-    return sendJson(res, 200, await startSala10Stream());
+    if (method === "POST" && url === "/api/obs/sala10/stream/start")
+      return sendJson(res, 200, await startSala10Stream());
 
-  if (method === "POST" && url === "/api/obs/sala10/stream/stop")
-    return sendJson(res, 200, await stopSala10Stream());
+    if (method === "POST" && url === "/api/obs/sala10/stream/stop")
+      return sendJson(res, 200, await stopSala10Stream());
 
-  // ---- Record ----
-  if (method === "GET" && url === "/api/obs/sala10/record/status")
-    return sendJson(res, 200, await getSala10RecordStatus());
+    // ---- Record ----
+    if (method === "GET" && url === "/api/obs/sala10/record/status")
+      return sendJson(res, 200, await getSala10RecordStatus());
 
-  if (method === "POST" && url === "/api/obs/sala10/record/start")
-    return sendJson(res, 200, await startSala10Record());
+    if (method === "POST" && url === "/api/obs/sala10/record/start")
+      return sendJson(res, 200, await startSala10Record());
 
-  if (method === "POST" && url === "/api/obs/sala10/record/stop")
-    return sendJson(res, 200, await stopSala10Record());
+    if (method === "POST" && url === "/api/obs/sala10/record/stop")
+      return sendJson(res, 200, await stopSala10Record());
 
-  if (method === "POST" && url === "/api/obs/sala10/record/pause")
-    return sendJson(res, 200, await pauseSala10Record());
+    if (method === "POST" && url === "/api/obs/sala10/record/pause")
+      return sendJson(res, 200, await pauseSala10Record());
 
-  if (method === "POST" && url === "/api/obs/sala10/record/resume")
-    return sendJson(res, 200, await resumeSala10Record());
+    if (method === "POST" && url === "/api/obs/sala10/record/resume")
+      return sendJson(res, 200, await resumeSala10Record());
 
-  // ---- Inputs ----
-  if (method === "GET" && url === "/api/obs/sala10/inputs") {
-    const result = await getSala10Inputs();
-    return sendJson(res, 200, result);
-  }
-
-  // ---- Audio toggle mute ----
-  if (method === "POST" && url === "/api/obs/sala10/audio/mute/toggle") {
-    const body = await readBody(req);
-    if (!body.inputName) return sendJson(res, 400, { ok: false, error: "Falta inputName" });
-    const result = await toggleSala10InputMute(body.inputName);
-    return sendJson(res, 200, result);
-  }
-
-  // ---- Scenes ----
-  if (method === "GET" && url === "/api/obs/sala10/scenes")
-    return sendJson(res, 200, await getSala10Scenes());
-
-  if (method === "POST" && url === "/api/obs/sala10/scene/set") {
-    try {
-      const body = await readBody(req);
-      const sceneName = (body.sceneName || "").trim();
-      if (!sceneName) return sendJson(res, 400, { ok: false, message: "Falta sceneName" });
-      return sendJson(res, 200, await setSala10Scene(sceneName));
-    } catch {
-      return sendJson(res, 400, { ok: false, message: "Body inválido" });
-    }
-  }
-
-  if (method === "POST" && url === "/api/obs/sala10/scene/items") {
-    try {
-      const body = await readBody(req);
-      const sceneName = (body.sceneName || "").trim();
-      if (!sceneName) return sendJson(res, 400, { ok: false, message: "Falta sceneName" });
-      return sendJson(res, 200, await getSala10SceneItems(sceneName));
-    } catch {
-      return sendJson(res, 400, { ok: false, message: "Body inválido" });
-    }
-  }
-
-  if (method === "POST" && url === "/api/obs/sala10/scene/item/enabled") {
-    try {
-      const body = await readBody(req);
-      const sceneName = (body.sceneName || "").trim();
-      const sceneItemId = Number(body.sceneItemId);
-      const sceneItemEnabled = !!body.sceneItemEnabled;
-
-      if (!sceneName) return sendJson(res, 400, { ok: false, message: "Falta sceneName" });
-      if (!Number.isFinite(sceneItemId))
-        return sendJson(res, 400, { ok: false, message: "Falta sceneItemId" });
-
-      return sendJson(
-        res,
-        200,
-        await setSala10SceneItemEnabled(sceneName, sceneItemId, sceneItemEnabled)
-      );
-    } catch {
-      return sendJson(res, 400, { ok: false, message: "Body inválido" });
-    }
-  }
-
-  if (method === "POST" && url === "/api/obs/sala10/scene/item/toggle-by-name") {
-    try {
-      const body = await readBody(req);
-      const sceneName = (body.sceneName || "").trim();
-      const sourceName = (body.sourceName || "").trim();
-      const enabled = body.enabled;
-
-      if (!sceneName) return sendJson(res, 400, { ok: false, message: "Falta sceneName" });
-      if (!sourceName) return sendJson(res, 400, { ok: false, message: "Falta sourceName" });
-      if (typeof enabled !== "boolean")
-        return sendJson(res, 400, { ok: false, message: "Falta enabled (boolean)" });
-
-      return sendJson(res, 200, await toggleSala10SceneItemByName(sceneName, sourceName, enabled));
-    } catch {
-      return sendJson(res, 400, { ok: false, message: "Body inválido" });
-    }
-  }
-
-  // ---- Audio mode ----
-  if (method === "GET" && url === "/api/obs/sala10/audio/state")
-    return sendJson(res, 200, await getSala10AudioState());
-
-  if (method === "POST" && url === "/api/obs/sala10/audio/mode") {
-    try {
-      const body = await readBody(req);
-      const mode = (body.mode || "").trim();
-      return sendJson(res, 200, await setSala10AudioMode(mode));
-    } catch {
-      return sendJson(res, 400, { ok: false, message: "Body inválido" });
-    }
-  }
-
-  // ---- Audio volume get ----
-  if (method === "POST" && url === "/api/obs/sala10/audio/volume/get") {
-    try {
-      const body = await readBody(req);
-      const inputName = (body.inputName || "").trim();
-      if (!inputName) return sendJson(res, 400, { ok: false, message: "Falta inputName" });
-      return sendJson(res, 200, await getSala10InputVolume(inputName));
-    } catch {
-      return sendJson(res, 400, { ok: false, message: "Body inválido" });
-    }
-  }
-
-  // ---- Audio volume set (clamp) ----
-  if (method === "POST" && url === "/api/obs/sala10/audio/volume/set") {
-    try {
-      const body = await readBody(req);
-      const inputName = (body.inputName || "").trim();
-      const inputVolumeDb = Number(body.inputVolumeDb);
-
-      if (!inputName) return sendJson(res, 400, { ok: false, message: "Falta inputName" });
-      if (!Number.isFinite(inputVolumeDb))
-        return sendJson(res, 400, { ok: false, message: "Falta inputVolumeDb (number)" });
-
-      return sendJson(res, 200, await setSala10InputVolumeDb_Clamp(inputName, inputVolumeDb));
-    } catch {
-      return sendJson(res, 400, { ok: false, message: "Body inválido" });
-    }
-  }
-
-  // ---- Stats ----
-  if (method === "GET" && url === "/api/obs/sala10/stats")
-    return sendJson(res, 200, await getSala10Stats());
-
-  // ---- Screenshot ----
-  if (method === "POST" && url === "/api/obs/sala10/screenshot") {
-    try {
-      const body = await readBody(req);
-      const sourceName = body.sourceName ? String(body.sourceName).trim() : null;
-      const width = body.width ? Number(body.width) : 1280;
-      const height = body.height ? Number(body.height) : 720;
-      const imageFormat = body.imageFormat ? String(body.imageFormat).trim() : "png";
-
-      return sendJson(res, 200, await screenshotSala10({ sourceName, width, height, imageFormat }));
-    } catch (e) {
-      return sendJson(res, 400, { ok: false, message: "Body inválido", error: e.message });
-    }
-  }
-
-  // ============================================================
-  // AUDIENCIA ACTUAL (SALA 10) - metadata + overlay
-  // ============================================================
-  if (method === "GET" && url === "/api/obs/sala10/audiencia/get") {
-    const state = await readAudienciaSala10();
-    return sendJson(res, 200, state);
-  }
-
-  if (method === "POST" && url === "/api/obs/sala10/audiencia/set") {
-    try {
-      const body = await readBody(req);
-      const prev = await readAudienciaSala10();
-
-      const fieldsIn = body.fields || {};
-      const fields = {
-        fecha: sanitizeOneLine(fieldsIn.fecha),
-        juzgado: sanitizeOneLine(fieldsIn.juzgado),
-        sala: sanitizeOneLine(fieldsIn.sala),
-        expediente: sanitizeOneLine(fieldsIn.expediente),
-        caratula: sanitizeOneLine(fieldsIn.caratula),
-        imputados: sanitizeOneLine(fieldsIn.imputados),
-        tipoProcedimiento: sanitizeOneLine(fieldsIn.tipoProcedimiento),
-        sede: sanitizeOneLine(fieldsIn.sede || "Suipacha"),
-      };
-
-      const next = {
-        ok: true,
-        data: {
-          visibleBanner:
-            typeof body.visibleBanner === "boolean" ? body.visibleBanner : prev.data.visibleBanner,
-          visibleOverlay:
-            typeof body.visibleOverlay === "boolean" ? body.visibleOverlay : prev.data.visibleOverlay,
-          updatedAt: nowIso(),
-          fields,
-        },
-      };
-
-      await writeAudienciaSala10(next);
-      return sendJson(res, 200, next);
-    } catch (e) {
-      return sendJson(res, 400, { ok: false, message: "Body inválido", error: e.message });
-    }
-  }
-
-  if (method === "POST" && url === "/api/obs/sala10/audiencia/overlay/apply") {
-    const state = await readAudienciaSala10();
-    const text = buildAudienciaText(state.data.fields || {});
-    const r1 = await setSala10OverlayText(text);
-
-    if (!r1.ok) return sendJson(res, 200, r1);
-
-    if (state.data.visibleOverlay === true) {
-      const r2 = await setSala10OverlayEnabled(true);
-      if (!r2.ok) return sendJson(res, 200, r2);
+    // ---- Inputs ----
+    if (method === "GET" && url === "/api/obs/sala10/inputs") {
+      const result = await getSala10Inputs();
+      return sendJson(res, 200, result);
     }
 
-    return sendJson(res, 200, { ok: true, applied: true });
-  }
-
-  if (method === "POST" && url === "/api/obs/sala10/audiencia/overlay/enabled") {
-    try {
+    // ---- Audio toggle mute ----
+    if (method === "POST" && url === "/api/obs/sala10/audio/mute/toggle") {
       const body = await readBody(req);
-      if (typeof body.enabled !== "boolean") {
-        return sendJson(res, 400, { ok: false, message: "Falta enabled (boolean)" });
+      if (!body.inputName) return sendJson(res, 400, { ok: false, error: "Falta inputName" });
+      const result = await toggleSala10InputMute(body.inputName);
+      return sendJson(res, 200, result);
+    }
+
+    // ---- Scenes ----
+    if (method === "GET" && url === "/api/obs/sala10/scenes")
+      return sendJson(res, 200, await getSala10Scenes());
+
+    if (method === "POST" && url === "/api/obs/sala10/scene/set") {
+      try {
+        const body = await readBody(req);
+        const sceneName = (body.sceneName || "").trim();
+        if (!sceneName) return sendJson(res, 400, { ok: false, message: "Falta sceneName" });
+        return sendJson(res, 200, await setSala10Scene(sceneName));
+      } catch {
+        return sendJson(res, 400, { ok: false, message: "Body inválido" });
+      }
+    }
+
+    if (method === "POST" && url === "/api/obs/sala10/scene/items") {
+      try {
+        const body = await readBody(req);
+        const sceneName = (body.sceneName || "").trim();
+        if (!sceneName) return sendJson(res, 400, { ok: false, message: "Falta sceneName" });
+        return sendJson(res, 200, await getSala10SceneItems(sceneName));
+      } catch {
+        return sendJson(res, 400, { ok: false, message: "Body inválido" });
+      }
+    }
+
+    if (method === "POST" && url === "/api/obs/sala10/scene/item/enabled") {
+      try {
+        const body = await readBody(req);
+        const sceneName = (body.sceneName || "").trim();
+        const sceneItemId = Number(body.sceneItemId);
+        const sceneItemEnabled = !!body.sceneItemEnabled;
+
+        if (!sceneName) return sendJson(res, 400, { ok: false, message: "Falta sceneName" });
+        if (!Number.isFinite(sceneItemId))
+          return sendJson(res, 400, { ok: false, message: "Falta sceneItemId" });
+
+        return sendJson(
+          res,
+          200,
+          await setSala10SceneItemEnabled(sceneName, sceneItemId, sceneItemEnabled)
+        );
+      } catch {
+        return sendJson(res, 400, { ok: false, message: "Body inválido" });
+      }
+    }
+
+    if (method === "POST" && url === "/api/obs/sala10/scene/item/toggle-by-name") {
+      try {
+        const body = await readBody(req);
+        const sceneName = (body.sceneName || "").trim();
+        const sourceName = (body.sourceName || "").trim();
+        const enabled = body.enabled;
+
+        if (!sceneName) return sendJson(res, 400, { ok: false, message: "Falta sceneName" });
+        if (!sourceName) return sendJson(res, 400, { ok: false, message: "Falta sourceName" });
+        if (typeof enabled !== "boolean")
+          return sendJson(res, 400, { ok: false, message: "Falta enabled (boolean)" });
+
+        return sendJson(res, 200, await toggleSala10SceneItemByName(sceneName, sourceName, enabled));
+      } catch {
+        return sendJson(res, 400, { ok: false, message: "Body inválido" });
+      }
+    }
+
+    // ---- Audio mode ----
+    if (method === "GET" && url === "/api/obs/sala10/audio/state")
+      return sendJson(res, 200, await getSala10AudioState());
+
+    if (method === "POST" && url === "/api/obs/sala10/audio/mode") {
+      try {
+        const body = await readBody(req);
+        const mode = (body.mode || "").trim();
+        return sendJson(res, 200, await setSala10AudioMode(mode));
+      } catch {
+        return sendJson(res, 400, { ok: false, message: "Body inválido" });
+      }
+    }
+
+    // ---- Audio volume get ----
+    if (method === "POST" && url === "/api/obs/sala10/audio/volume/get") {
+      try {
+        const body = await readBody(req);
+        const inputName = (body.inputName || "").trim();
+        if (!inputName) return sendJson(res, 400, { ok: false, message: "Falta inputName" });
+        return sendJson(res, 200, await getSala10InputVolume(inputName));
+      } catch {
+        return sendJson(res, 400, { ok: false, message: "Body inválido" });
+      }
+    }
+
+    // ---- Audio volume set (clamp) ----
+    if (method === "POST" && url === "/api/obs/sala10/audio/volume/set") {
+      try {
+        const body = await readBody(req);
+        const inputName = (body.inputName || "").trim();
+        const inputVolumeDb = Number(body.inputVolumeDb);
+
+        if (!inputName) return sendJson(res, 400, { ok: false, message: "Falta inputName" });
+        if (!Number.isFinite(inputVolumeDb))
+          return sendJson(res, 400, { ok: false, message: "Falta inputVolumeDb (number)" });
+
+        return sendJson(res, 200, await setSala10InputVolumeDb_Clamp(inputName, inputVolumeDb));
+      } catch {
+        return sendJson(res, 400, { ok: false, message: "Body inválido" });
+      }
+    }
+
+    // ---- Stats ----
+    if (method === "GET" && url === "/api/obs/sala10/stats")
+      return sendJson(res, 200, await getSala10Stats());
+
+    // ---- Screenshot ----
+    if (method === "POST" && url === "/api/obs/sala10/screenshot") {
+      try {
+        const body = await readBody(req);
+        const sourceName = body.sourceName ? String(body.sourceName).trim() : null;
+        const width = body.width ? Number(body.width) : 1280;
+        const height = body.height ? Number(body.height) : 720;
+        const imageFormat = body.imageFormat ? String(body.imageFormat).trim() : "png";
+
+        return sendJson(res, 200, await screenshotSala10({ sourceName, width, height, imageFormat }));
+      } catch (e) {
+        return sendJson(res, 400, { ok: false, message: "Body inválido", error: e.message });
+      }
+    }
+
+    // ============================================================
+    // AUDIENCIA ACTUAL (SALA 10) - metadata + overlay
+    // ============================================================
+    if (method === "GET" && url === "/api/obs/sala10/audiencia/get") {
+      const state = await readAudienciaSala10();
+      return sendJson(res, 200, state);
+    }
+
+    if (method === "POST" && url === "/api/obs/sala10/audiencia/set") {
+      try {
+        const body = await readBody(req);
+        const prev = await readAudienciaSala10();
+
+        const fieldsIn = body.fields || {};
+        const fields = {
+          fecha: sanitizeOneLine(fieldsIn.fecha),
+          juzgado: sanitizeOneLine(fieldsIn.juzgado),
+          sala: sanitizeOneLine(fieldsIn.sala),
+          expediente: sanitizeOneLine(fieldsIn.expediente),
+          caratula: sanitizeOneLine(fieldsIn.caratula),
+          imputados: sanitizeOneLine(fieldsIn.imputados),
+          tipoProcedimiento: sanitizeOneLine(fieldsIn.tipoProcedimiento),
+          sede: sanitizeOneLine(fieldsIn.sede || "Suipacha"),
+        };
+
+        const next = {
+          ok: true,
+          data: {
+            visibleBanner:
+              typeof body.visibleBanner === "boolean" ? body.visibleBanner : prev.data.visibleBanner,
+            visibleOverlay:
+              typeof body.visibleOverlay === "boolean" ? body.visibleOverlay : prev.data.visibleOverlay,
+            updatedAt: nowIso(),
+            fields,
+          },
+        };
+
+        await writeAudienciaSala10(next);
+        return sendJson(res, 200, next);
+      } catch (e) {
+        return sendJson(res, 400, { ok: false, message: "Body inválido", error: e.message });
+      }
+    }
+
+    if (method === "POST" && url === "/api/obs/sala10/audiencia/overlay/apply") {
+      const state = await readAudienciaSala10();
+      const text = buildAudienciaText(state.data.fields || {});
+      const r1 = await setSala10OverlayText(text);
+
+      if (!r1.ok) return sendJson(res, 200, r1);
+
+      if (state.data.visibleOverlay === true) {
+        const r2 = await setSala10OverlayEnabled(true);
+        if (!r2.ok) return sendJson(res, 200, r2);
       }
 
-      const state = await readAudienciaSala10();
-      state.data.visibleOverlay = body.enabled;
-      state.data.updatedAt = nowIso();
-      await writeAudienciaSala10(state);
-
-      const r = await setSala10OverlayEnabled(body.enabled);
-      return sendJson(res, 200, r.ok ? { ok: true, enabled: body.enabled } : r);
-    } catch (e) {
-      return sendJson(res, 400, { ok: false, message: "Body inválido", error: e.message });
+      return sendJson(res, 200, { ok: true, applied: true });
     }
-  }
 
-  // ------------------------------
+    if (method === "POST" && url === "/api/obs/sala10/audiencia/overlay/enabled") {
+      try {
+        const body = await readBody(req);
+        if (typeof body.enabled !== "boolean") {
+          return sendJson(res, 400, { ok: false, message: "Falta enabled (boolean)" });
+        }
+
+        const state = await readAudienciaSala10();
+        state.data.visibleOverlay = body.enabled;
+        state.data.updatedAt = nowIso();
+        await writeAudienciaSala10(state);
+
+        const r = await setSala10OverlayEnabled(body.enabled);
+        return sendJson(res, 200, r.ok ? { ok: true, enabled: body.enabled } : r);
+      } catch (e) {
+        return sendJson(res, 400, { ok: false, message: "Body inválido", error: e.message });
+      }
+    }
+
+    // ------------------------------
   }
   // RUTA NO ENCONTRADA
   // ------------------------------
@@ -2216,8 +2216,19 @@ __sendErr(404, "DYN_ROUTE_NOT_IMPLEMENTED", { error: "Ruta dinámica no implemen
 });
 
 // -------------------------------------------------------------
-// INICIO SERVIDOR
+// INICIO SERVIDOR (Async para DB)
 // -------------------------------------------------------------
-server.listen(8081, "127.0.0.1", () => {
-  console.log("Backend OGAAC iniciado en http://127.0.0.1:8081");
-});
+(async () => {
+  // Intentar cargar caché de DB
+  console.log("[STARTUP] Inicializando configuración de salas...");
+  const dbOk = await initFromDB();
+  if (dbOk) {
+    console.log("[STARTUP] ✅ Salas cargadas desde PostgreSQL");
+  } else {
+    console.log("[STARTUP] ⚠️ PostgreSQL no disponible, usando fallback JSON");
+  }
+
+  server.listen(8081, "127.0.0.1", () => {
+    console.log("Backend OGAAC iniciado en http://127.0.0.1:8081");
+  });
+})();
