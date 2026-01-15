@@ -1,0 +1,55 @@
+{
+  "users": [
+    {
+      "username": "operator01",
+      "passwordHash": "c63c294a92e253e7f7a3e5417a95e6ae598b68d82d5136d18c8fa9d992474799",
+      "role": "operator",
+      "enabled": true,
+      "source": "local",
+      "createdAt": "2026-01-08T20:06:07.989Z",
+      "updatedAt": "2026-01-08T20:06:07.989Z",
+      "note": null
+    },
+    {
+      "username": "mabranca",
+      "passwordHash": "0bab466bc8c055d8f3939269a13ebd288eedfdc8d13c284b84472a75179d4b8b",
+      "role": "operator",
+      "enabled": true,
+      "source": "local",
+      "createdAt": "2026-01-08T20:08:50.687Z",
+      "updatedAt": "2026-01-08T20:08:50.687Z",
+      "note": null
+    },
+    {
+      "username": "testaudit",
+      "passwordHash": "6fec2a9601d5b3581c94f2150fc07fa3d6e45808079428354b868e412b76e6bb",
+      "role": "viewer",
+      "enabled": true,
+      "source": "local",
+      "createdAt": "2026-01-09T13:58:41.836Z",
+      "updatedAt": "2026-01-09T13:58:41.836Z",
+      "note": null
+    },
+    {
+      "username": "testaudit3",
+      "passwordHash": "6fec2a9601d5b3581c94f2150fc07fa3d6e45808079428354b868e412b76e6bb",
+      "role": "viewer",
+      "enabled": true,
+      "source": "local",
+      "createdAt": "2026-01-09T13:59:19.327Z",
+      "updatedAt": "2026-01-09T13:59:19.327Z",
+      "note": null
+    },
+    {
+      "username": "asurita",
+      "passwordHash": "0bab466bc8c055d8f3939269a13ebd288eedfdc8d13c284b84472a75179d4b8b",
+      "role": "viewer",
+      "enabled": true,
+      "source": "local",
+      "createdAt": "2026-01-09T14:40:21.940Z",
+      "updatedAt": "2026-01-09T14:40:21.940Z",
+      "note": null,
+      "scope": null
+    }
+  ]
+}

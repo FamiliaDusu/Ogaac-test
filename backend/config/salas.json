@@ -1,0 +1,132 @@
+{
+  "suipacha": {
+    "sala01": {
+      "ws": "ws://10.64.204.55:4455",
+      "enabled": true,
+      "needsSecrets": true
+    },
+    "sala02": {
+      "ws": "ws://10.64.203.55:4455",
+      "enabled": true,
+      "needsSecrets": true
+    },
+    "sala03": {
+      "ws": "ws://10.64.202.55:4455",
+      "enabled": true,
+      "needsSecrets": true
+    },
+    "sala04": {
+      "ws": "ws://10.64.201.55:4455",
+      "enabled": true,
+      "needsSecrets": true
+    },
+    "sala05": {
+      "ws": "ws://IP_SUIPACHA_SALA05:4455",
+      "enabled": true,
+      "needsSecrets": true
+    },
+    "sala06": {
+      "ws": "ws://10.64.209.55:4455",
+      "enabled": true,
+      "needsSecrets": true
+    },
+    "sala07": {
+      "ws": "ws://10.64.208.55:4455",
+      "enabled": true,
+      "needsSecrets": true
+    },
+    "sala08": {
+      "ws": "ws://10.64.207.55:4455",
+      "enabled": true,
+      "needsSecrets": true
+    },
+    "sala09": {
+      "ws": "ws://10.64.205.55:4455",
+      "enabled": true,
+      "needsSecrets": true
+    },
+    "sala10": {
+      "ws": "ws://10.64.206.55:4455",
+      "enabled": true,
+      "needsSecrets": true
+    }
+  },
+  "tacuari": {
+    "sala01": {
+      "ws": "ws://10.7.201.55:4455",
+      "enabled": false,
+      "needsSecrets": false
+    },
+    "sala03": {
+      "ws": "ws://10.7.203.55:4455",
+      "enabled": false,
+      "needsSecrets": false
+    },
+    "sala04": {
+      "ws": "ws://10.7.204.55:4455",
+      "enabled": false,
+      "needsSecrets": false
+    },
+    "sala06": {
+      "ws": "ws://10.7.206.55:4455",
+      "enabled": false,
+      "needsSecrets": false
+    },
+    "sala07": {
+      "ws": "ws://10.7.207.55:4455",
+      "enabled": false,
+      "needsSecrets": false
+    },
+    "sala08": {
+      "ws": "ws://10.7.208.55:4455",
+      "enabled": false,
+      "needsSecrets": false
+    },
+    "sala09": {
+      "ws": "ws://10.7.209.55:4455",
+      "enabled": false,
+      "needsSecrets": false
+    }
+  },
+  "balbin": {
+    "sala01": {
+      "ws": "ws://IP_BALBIN_SALA01:4455",
+      "enabled": false,
+      "needsSecrets": false
+    },
+    "sala02": {
+      "ws": "ws://IP_BALBIN_SALA02:4455",
+      "enabled": false,
+      "needsSecrets": false
+    },
+    "sala03": {
+      "ws": "ws://IP_BALBIN_SALA03:4455",
+      "enabled": false,
+      "needsSecrets": false
+    }
+  },
+  "yrigoyen": {
+    "sala01": {
+      "ws": "ws://10.46.201.55:4455",
+      "enabled": false,
+      "needsSecrets": false
+    },
+    "sala02": {
+      "ws": "ws://10.46.202.55:4455",
+      "enabled": false,
+      "needsSecrets": false
+    }
+  },
+  "libertad": {
+    "sum": {
+      "ws": "ws://IP_LIBERTAD_SUM:4455",
+      "enabled": false,
+      "needsSecrets": false
+    },
+    "sala02": {
+      "ws": "ws://IP_LIBERTAD_SALA02:4455",
+      "enabled": false,
+      "needsSecrets": false
+    }
+  }
+}
