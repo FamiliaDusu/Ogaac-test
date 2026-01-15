@@ -1,244 +1,258 @@
-/* ============================================================
-   OGAAC - Control Room
-   Layout:
-   - Izquierda grande: VIDEO
-   - Derecha arriba: AUDIENCIA
-   - Derecha abajo: CONTROL OBS
-   ============================================================ */
+/* CONTROL ROOM - SHARED */
+.control-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.panel-stat { background: white; padding: 20px; border-radius: 8px; border: 1px solid #C8C9CC; }
+.stat-value { font-size: 2rem; color: #7A1E2C; font-weight: bold; }
+.stat-label { color: #666; font-size: 0.9rem; text-transform: uppercase; }
 
-.control-grid{
-  display:grid;
-  grid-template-columns: 2.3fr 1fr;
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    "video audiencia"
-    "video control";
-  gap:16px;
-  align-items:stretch;
-}
+/* =======================================================
+   SALA EN VIVO - REFACTORIZACIÓN DASHBOARD
+   Grid Asimétrico: Video 40% | Form 25% | OBS 35%
+   ======================================================= */
 
-/* áreas */
-.card-stream{ grid-area: video; }
-.card-audiencia{ grid-area: audiencia; }
-.card-obsright{ grid-area: control; }
-
-/* ================= VIDEO (columna izquierda alta completa) ================= */
-.card-stream{
-  display:flex;
-  flex-direction:column;
-  min-height: 720px;
-}
-
-.video-wrapper{
-  width:100%;
-  flex: 1;                 /* clave: ocupa alto disponible */
-  min-height: 420px;
-  background:#0b0f16;
-  border-radius:14px;
-  overflow:hidden;
-}
-
-.video-wrapper video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-/* ================= CABECERAS ================= */
-.panel-head{
-  padding:12px 14px;
-  border-bottom:1px solid rgba(0,0,0,.08);
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:10px;
-}
-
-.panel-title{ font-weight:700; font-size:14px; }
-.panel-note{ font-size:12px; opacity:.75; }
-
-/* ================= AUDIENCIA ================= */
-.card-audiencia{
-  padding:0;
-  overflow:hidden;
-}
-
-.card-audiencia input,
-.card-audiencia select{
-  width:100%;
-  box-sizing:border-box;
-  padding:9px 10px;
-  border-radius:10px;
-  border:1px solid rgba(0,0,0,.12);
-  background:rgba(255,255,255,.96);
-  color:#111827;
-  font-size:13px;
-}
-
-/* ================= CONTROL OBS (derecha abajo) ================= */
-.card-obsright{
-  padding:0;
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-  min-height: 420px;
-}
-
-.panel-iframe{
-  width:100%;
-  border:0;
-  display:block;
-  background:#0e1117;
-  flex:1;
-  min-height: 420px;
-}
-
-/* ================= RESPONSIVE ================= */
-@media (max-width: 1100px){
-  .control-grid{
+/* --- GRID PRINCIPAL ASIMÉTRICO --- */
+.control-grid {
+    display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-    grid-template-areas:
-      "video"
-      "audiencia"
-      "control";
-  }
-
-  .card-stream{ min-height: auto; }
-  .video-wrapper{ min-height: 240px; }
-  .panel-iframe{ min-height: 600px; }
-}
-.stream-page .content-inner{
-  max-width: 2000px !important;
-  width: 100% !important;
-}
-.stream-page .content-inner{
-  padding-left: 18px !important;
-  padding-right: 18px !important;
-}
-/* Video más protagonista */
-.card-stream{
-  padding: 8px 8px 10px 8px;
-}
-.video-wrapper{
-  min-height: 520px;
-}
-/* Control Room: empujar layout hacia la izquierda */
-.stream-page .content-inner{
-  margin-left: 0 !important;
-  margin-right: 8px !important;
-  padding-left: 16px !important;
-}
-/* ===== Control Room: subir todo hacia arriba ===== */
-
-/* achica el espacio del encabezado de página (título + volver) */
-.stream-page .page-subheader{
-  margin: 8px 0 10px !important;
-  padding: 0 !important;
+    gap: 1.25rem;
+    padding: 0;
 }
 
-/* reduce el padding superior general del main */
-.stream-page .page-main{
-  padding-top: 10px !important;
+@media (min-width: 768px) {
+    .control-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .control-grid .card-stream {
+        grid-column: 1 / -1;
+    }
 }
 
-/* si tu contenedor interno tiene padding grande, lo achicamos */
-.stream-page .content-inner{
-  padding-top: 6px !important;
+@media (min-width: 1200px) {
+    .control-grid {
+        grid-template-columns: 40% 25% 35%;
+        gap: 1.5rem;
+    }
+    .control-grid .card-stream {
+        grid-column: auto;
+    }
 }
 
-/* por si los h1/p del subheader tienen margen enorme */
-.stream-page .page-subheader h1{
-  margin: 0 0 6px 0 !important;
-}
-.stream-page .page-subheader p{
-  margin: 0 0 6px 0 !important;
-}
-.stream-page .content-inner{
-  margin: 0 !important;
-  padding-left: 6px !important;
-}
-
-.card-stream{
-  margin-left: -12px;
+/* --- TARJETAS PREMIUM (Card Panel OGAAC) --- */
+.card-stream,
+.card-audiencia,
+.card-obsright {
+    background: #ffffff;
+    border-radius: 12px;
+    border: none;
+    border-top: 4px solid #800020;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.control-grid{
-  grid-template-columns: 2.4fr 1fr;
+.card-stream:hover,
+.card-audiencia:hover,
+.card-obsright:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
 }
 
-/* =========================================================
-   CONTROL ROOM – layout operador (sin márgenes institucionales)
-   ========================================================= */
-
-/* Elimina centrado institucional */
-.stream-page .content-inner{
-  max-width: none !important;
-  width: 90% !important;
-  margin: 0 !important;
-  padding-left: 6px !important;
-  padding-right: 12px !important;
+/* --- PANEL VIDEO (Estilo Cine) --- */
+.card-stream .card-header {
+    padding: 0.75rem 1rem;
+    background: #fafafa;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-/* Grid: video MUY dominante */
-.stream-page .control-grid{
-  grid-template-columns: 2.2fr 1.8fr;
+.card-stream .video-wrapper {
+    padding: 0;
+    background: #000;
 }
 
-/* Card del video: que arranque bien a la izquierda */
-.stream-page .card-stream{
-  margin-left: 0px;
-  padding: 6px;
+.card-stream video {
+    width: 100%;
+    display: block;
+    min-height: 300px;
+    object-fit: cover;
 }
 
-/* Que el video use TODO el alto disponible */
-.stream-page .video-wrapper{
-  flex: 1;
-  min-height: 520px;
-}
-/* =========================================================
-   HEADER CONTROL ROOM – título centrado
-   ========================================================= */
-
-.header-control-room{
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  padding: 10px 16px;
+@media (min-width: 1200px) {
+    .card-stream video {
+        min-height: 400px;
+    }
 }
 
-/* columnas */
-.header-left{ justify-self: start; }
-.header-center{
-  justify-self: center;
-  color: #ffffff;
-  font-size: clamp(20px, 2vw, 28px);
-  font-weight: 700;
-  letter-spacing: .4px;
-}
-.header-center{
-  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+/* --- PANEL AUDIENCIA (Compacto) --- */
+.card-audiencia .panel-head {
+    padding: 0.75rem 1rem;
+    background: #fafafa;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-.header-right{ justify-self: end; }
-
-/* aseguramos color blanco en barra gris */
-.header-control-room,
-.header-control-room *{
-  color: #ffffff;
+.card-audiencia .panel-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1f2937;
 }
 
-/* --- OBS API badge (pill) --- */
-.pill { 
-  display:inline-flex; align-items:center; gap:6px;
-  padding:4px 10px; border-radius:999px;
-  font-size:12px; line-height:1; 
-  border:1px solid rgba(0,0,0,.12);
-  background:#fff;
+.card-audiencia .panel-note {
+    font-size: 0.75rem;
+    color: #6b7280;
 }
-.pill.status-ok { 
-  border-color: rgba(0,128,0,.35);
+
+.card-audiencia .aud-box {
+    display: grid;
+    gap: 0.5rem;
 }
-.pill.status-error { 
-  border-color: rgba(200,0,0,.35);
+
+.card-audiencia .aud-box input,
+.card-audiencia .aud-box select {
+    padding: 0.5rem 0.75rem;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.card-audiencia .aud-box input:focus,
+.card-audiencia .aud-box select:focus {
+    background: #fff;
+    border-color: #800020;
+    box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+    outline: none;
+}
+
+/* Botones Grid 2x2 */
+.card-audiencia .aud-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.card-audiencia .aud-actions .btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #800020;
+    color: #fff;
+    transition: all 0.15s;
+}
+
+.card-audiencia .aud-actions .btn:hover {
+    background: #5d1622;
+    transform: translateY(-1px);
+}
+
+.card-audiencia .aud-actions .btn-secondary {
+    background: #e5e7eb;
+    color: #374151;
+    grid-column: 1 / -1;
+}
+
+.card-audiencia .aud-actions .btn-secondary:hover {
+    background: #d1d5db;
+}
+
+/* --- PANEL OBS (Iframe Nativo) --- */
+.card-obsright {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-obsright .panel-head {
+    padding: 0.75rem 1rem;
+    background: #fafafa;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.card-obsright .panel-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.card-obsright .panel-note {
+    font-size: 0.7rem;
+    color: #6b7280;
+    text-decoration: none;
+}
+
+.card-obsright .panel-note:hover {
+    color: #800020;
+}
+
+.card-obsright .pill {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    color: #374151;
+}
+
+/* CRÍTICO: Iframe sin scroll */
+.card-obsright .panel-iframe {
+    flex: 1;
+    width: 100%;
+    min-height: 400px;
+    border: none;
+    display: block;
+}
+
+@media (min-width: 1200px) {
+    .card-obsright .panel-iframe {
+        min-height: 500px;
+    }
+}
+
+/* --- HEADER CONTROL ROOM --- */
+.header-control-room {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background: #4A4A4A;
+    border-bottom: 4px solid #800020;
+}
+
+.header-control-room .header-left {
+    text-align: left;
+}
+
+.header-control-room .header-center {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    text-align: center;
+}
+
+.header-control-room .header-right {
+    text-align: right;
+}
+
+/* --- STATUS TAG --- */
+.status-tag {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.status-tag.online {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-tag.offline {
+    background: #fee2e2;
+    color: #991b1b;
 }

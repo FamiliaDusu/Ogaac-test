@@ -1,0 +1,12 @@
+# Archivos de backup
+*.BAK*
+*.bak*
+*.backup
+
+# Archivos temporales
+*.tmp
+*.swp
+*~
+
+# Capturas de OBS
+html/web-socket-obs/capturas/*.png

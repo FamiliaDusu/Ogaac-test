@@ -749,3 +749,93 @@ body.modal-open {
   color: var(--text-main);
   font-weight: 600;
 }
+
+/* =======================================================
+   PARCHE INSTITUCIONAL (OVERRIDE) - PODER JUDICIAL
+   Forzando colores sin romper estructura Grid/Flex
+   ======================================================= */
+
+:root {
+    /* Redefinimos variables locales para asegurar el tono exacto */
+    --header-bg: #4A4A4A;
+    --accent: #7A1E2C; 
+    --bg-main: #F5F5F7;
+    --text-main: #303030;
+}
+
+/* 1. HEADER OSCURO (Lo más importante para la identidad) */
+.operador-header {
+    background-color: var(--header-bg) !important;
+    border-bottom: 4px solid var(--accent) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.operador-brand, 
+.operador-brand a,
+.operador-user-name {
+    color: #FFFFFF !important; /* Texto blanco sobre fondo oscuro */
+}
+
+/* 2. FONDO GENERAL UNIFICADO */
+.operador-page {
+    background-color: var(--bg-main) !important;
+}
+
+/* 3. BOTONES DE ACCIÓN (Forzar Bordó) */
+.operador-card-btn--primary,
+.btn-primary,
+.operador-toolbar-btn.active {
+    background-color: var(--accent) !important;
+    border-color: var(--accent) !important;
+    color: #FFFFFF !important;
+}
+
+.operador-card-btn--primary:hover {
+    background-color: #5d1622 !important; /* Bordó más oscuro */
+}
+
+/* 4. LIMPIEZA VISUAL DE CARDS */
+.operador-card {
+    background: #FFFFFF;
+    border: 1px solid #C8C9CC;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* --- OPERADOR UI POLISH (Espaciado & Animación) --- */
+
+/* Separar más las tarjetas */
+.operador-grid--sedes, .operador-grid {
+    gap: 2rem !important;
+    padding: 1rem 0;
+}
+
+/* Tarjetas con vida */
+.operador-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid transparent;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.operador-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    border-color: #e0e0e0;
+}
+
+/* Títulos de Sede más grandes */
+.operador-card-header, .operador-card h3 {
+    font-size: 1.25rem !important;
+    padding: 1.2rem 1.5rem !important;
+}
+
+/* Cuerpo de tarjeta más espacioso */
+.operador-card-body {
+    padding: 1.5rem !important;
+}
+
+/* Status dots más visibles */
+.status-dot {
+    width: 12px;
+    height: 12px;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.8);
+}

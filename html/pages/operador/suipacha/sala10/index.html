@@ -2,139 +2,360 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Operador · Suipacha · sala 10</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Operador · Suipacha · Sala 10</title>
 
-  <!-- CSS base -->
   <link rel="stylesheet" href="/ogaac.css" />
-  <link rel="stylesheet" href="/css/sala-stream.css" />
-  <!-- Layout Control Room (cine) -->
-  <link rel="stylesheet" href="/operador/_shared/css/control-room.css">
-
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-  <!-- SOLO estilos de Audiencia (no layout) -->
   <style>
-    .aud-box{ margin-top:10px; display:grid; gap:8px; width:100%; }
-    .aud-row2{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .aud-actions{ display:flex; gap:8px; flex-wrap:wrap; }
-    .aud-box input,.aud-box select{
-      width:100%; box-sizing:border-box; padding:7px 9px;
-      border-radius:10px; border:1px solid rgba(0,0,0,.12);
-      background:#fff; font-size:13px;
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #f3f4f6;
+      font-family: system-ui, -apple-system, sans-serif;
     }
-    @media (max-width:520px){ .aud-row2{ grid-template-columns:1fr; } }
+    
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #4A4A4A 0%, #333 100%);
+      border-bottom: 4px solid #800020;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .header-brand { font-size: 15px; color: #fff; font-weight: 600; }
+    .header-title { font-size: 18px; color: #fff; font-weight: 700; }
+    
+    .header-actions { display: flex; gap: 8px; }
+    
+    .btn {
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    
+    .btn-back {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .btn-back:hover { background: rgba(255,255,255,0.2); }
+    
+    .btn-logout { background: #800020; color: #fff; }
+    .btn-logout:hover { background: #5d1622; }
+    
+    /* Layout Principal: Video 60% | Paneles 40% */
+    .main-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      padding: 16px;
+    }
+    
+    @media (min-width: 1024px) {
+      .main-layout {
+        grid-template-columns: 60% 40%;
+        gap: 20px;
+        padding: 20px;
+      }
+    }
+    
+    /* Panel Video (60% izquierda) */
+    .panel-video {
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .panel-video video {
+      width: 100%;
+      flex: 1;
+      min-height: 300px;
+      object-fit: contain;
+      background: #000;
+    }
+    
+    @media (min-width: 1024px) {
+      .panel-video video { min-height: 500px; }
+    }
+    
+    .video-bar {
+      padding: 10px 16px;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    
+    .video-bar .status {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+    
+    .video-bar .status-badge {
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .status-badge.live { background: #22c55e; color: #fff; }
+    .status-badge.checking { background: #6b7280; color: #fff; }
+    .status-badge.offline { background: #ef4444; color: #fff; }
+    
+    /* Columna Derecha: Datos + OBS apilados */
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    /* Panel Base */
+    .panel {
+      background: #fff;
+      border-radius: 12px;
+      border-top: 4px solid #800020;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+    
+    .panel-header {
+      padding: 12px 16px;
+      background: #fafafa;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .panel-header h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    
+    .panel-body { padding: 14px 16px; }
+    
+    /* Formulario Audiencia */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group.full { grid-column: 1 / -1; }
+    
+    .form-group label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    
+    .form-group input,
+    .form-group select {
+      padding: 8px 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #f9fafb;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      background: #fff;
+      border-color: #800020;
+      box-shadow: 0 0 0 2px rgba(128,0,32,0.1);
+      outline: none;
+    }
+    
+    /* Botones */
+    .btn-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .btn-row .btn-full { grid-column: 1 / -1; }
+    
+    .btn-action {
+      padding: 10px 8px;
+      border: none;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .btn-primary { background: #800020; color: #fff; }
+    .btn-primary:hover { background: #5d1622; }
+    
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    
+    .btn-danger { background: #fee2e2; color: #991b1b; }
+    .btn-danger:hover { background: #fecaca; }
+    
+    /* Panel OBS */
+    .panel-obs .panel-body { padding: 0; }
+    
+    .panel-obs iframe {
+      width: 100%;
+      min-height: 280px;
+      border: none;
+      display: block;
+    }
+    
+    @media (min-width: 1024px) {
+      .panel-obs iframe { min-height: 320px; }
+    }
+    
+    /* Footer */
+    .footer {
+      background: #4A4A4A;
+      border-top: 3px solid #800020;
+      padding: 10px 20px;
+      color: rgba(255,255,255,0.7);
+      font-size: 11px;
+      text-align: center;
+    }
   </style>
 </head>
+<body>
 
-<body class="page stream-page">
-
-<header class="ogaac-header header-control-room">
-  <div class="header-left">
-    <div class="ogaac-brand-title">OGAAC · Salas en vivo</div>
-  </div>
-
-  <div class="header-center">SUIPACHA · SALA10</div>
-
-  <div class="header-right">
-    <button class="btn-logout" type="button" onclick="ogaacLogout()">Cerrar sesión</button>
+<!-- Header -->
+<header class="header">
+  <div class="header-brand">OGAAC · Operador</div>
+  <div class="header-title" id="dynamic-title">Suipacha · Sala 10</div>
+  <div class="header-actions">
+    <a class="btn btn-back" href="/operador/suipacha/">← Volver</a>
+    <button class="btn btn-logout" onclick="ogaacLogout()">🚪 Salir</button>
   </div>
 </header>
 
-<main class="page-main">
-  <div class="content-inner">
+<!-- Layout Principal -->
+<main class="main-layout">
 
-    <div class="page-subheader" style="display:flex;gap:10px;margin:6px 0 10px;">
-      <button class="btn-ghost btn" onclick="location.href='/index.html'">← Volver al Portal</button>
-      <button id="btnVolverSede" class="btn-ghost btn">← Volver a la sede</button>
-    </div>
-
-    <div class="control-grid">
-
-      <article class="card card-stream">
-        <div class="card-header">
-          <div class="card-title-inline">Visualización interna</div>
-          <div id="statusTag" class="status-tag">Verificando…</div>
-        </div>
-        <div class="video-wrapper">
-          <video id="video" controls autoplay muted playsinline></video>
-        </div>
-        <div id="status">Cargando stream…</div>
-      </article>
-
-      <article class="card card-audiencia">
-        <div class="panel-head">
-          <div>
-            <div class="panel-title">Audiencia</div>
-            <div class="panel-note">Carga + Overlay + Cartel web</div>
-          </div>
-        </div>
-
-        <div class="aud-box" style="padding:12px 14px 14px;">
-          <div style="display:flex;gap:8px;align-items:center;">
-            <b style="font-size:12px;">Audiencia</b>
-            <span id="aud-msg" style="font-size:12px;opacity:.7;"></span>
-          </div>
-
-          <div class="aud-row2">
-            <input id="aud-fecha" type="date">
-            <select id="aud-fuero"></select>
-          </div>
-
-          <div class="aud-row2">
-            <select id="aud-juzgado"></select>
-            <input id="aud-exp" placeholder="Expediente">
-          </div>
-
-          <div class="aud-row2">
-            <select id="aud-sala">
-              <option value="10">Sala 10</option>
-            </select>
-            <select id="aud-tipo"></select>
-          </div>
-
-          <input id="aud-caratula" placeholder="Carátula">
-          <input id="aud-imputados" placeholder="Cantidad imputados">
-
-          <div class="aud-actions">
-            <button class="btn" onclick="audSave()">Guardar</button>
-            <button class="btn" onclick="audApplyToOBS()">Aplicar a video</button>
-            <button class="btn" onclick="audToggleOverlay()">Overlay</button>
-            <button class="btn" onclick="audToggleBanner()">Cartel web</button>
-            <button class="btn btn-secondary" onclick="audClear()">Limpiar</button>
-          </div>
-        </div>
-      </article>
-
-      <article class="card card-obsright">
-        <div class="panel-head">
-          <div>
-            <div class="panel-title">Control OGAAC · Control OBS</div>
-            <div class="panel-note">Sala 10 (Suipacha)</div>
-          </div>
-          <span id="obsApiStatus" class="pill">OBS: ...</span>
-          <a class="panel-note" id="obsAdvancedLink" href="/web-socket-obs/index.html" target="_blank">Avanzado</a>
-          <a class="panel-note" id="obsBasicLink" href="/web-socket-obs/basic.html" target="_blank">Básico</a>
-          <a class="panel-note" href="/web-socket-obs/" target="_blank">Abrir</a>
-        </div>
-
-        <iframe class="panel-iframe"
-          src="/web-socket-obs/basic.html?sede=suipacha&sala=sala10"
-          loading="lazy"></iframe>
-      </article>
-
+  <!-- VIDEO 60% Izquierda -->
+  <div class="panel-video">
+    <video id="video" controls autoplay muted playsinline></video>
+    <div class="video-bar">
+      <span class="status" id="status">Conectando...</span>
+      <span id="statusTag" class="status-badge checking">Verificando</span>
     </div>
   </div>
+
+  <!-- Columna Derecha 40%: Datos + OBS -->
+  <div class="right-column">
+    
+    <!-- Datos Audiencia (Arriba) -->
+    <article class="panel panel-form">
+      <div class="panel-header">
+        <h3>📋 Datos de Audiencia</h3>
+        <span id="aud-msg" style="font-size:11px;color:#6b7280;"></span>
+      </div>
+      <div class="panel-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha</label>
+            <input id="aud-fecha" type="date">
+          </div>
+          <div class="form-group">
+            <label>Fuero</label>
+            <select id="aud-fuero"></select>
+          </div>
+          <div class="form-group">
+            <label>Juzgado</label>
+            <select id="aud-juzgado"></select>
+          </div>
+          <div class="form-group">
+            <label>Expediente</label>
+            <input id="aud-exp" placeholder="Nro">
+          </div>
+          <div class="form-group">
+            <label>Sala</label>
+            <select id="aud-sala"><option value="10">Sala 10</option></select>
+          </div>
+          <div class="form-group">
+            <label>Tipo</label>
+            <select id="aud-tipo"></select>
+          </div>
+          <div class="form-group full">
+            <label>Carátula</label>
+            <input id="aud-caratula" placeholder="Carátula del expediente">
+          </div>
+          <div class="form-group full">
+            <label>Imputados</label>
+            <input id="aud-imputados" placeholder="Cantidad">
+          </div>
+        </div>
+        
+        <div class="btn-row">
+          <button class="btn-action btn-primary" onclick="audSave()">Guardar</button>
+          <button class="btn-action btn-primary" onclick="audApplyToOBS()">Aplicar</button>
+          <button class="btn-action btn-secondary" onclick="audToggleOverlay()">Overlay</button>
+          <button class="btn-action btn-secondary" onclick="audToggleBanner()">Cartel</button>
+          <button class="btn-action btn-danger btn-full" onclick="audClear()">🗑️ Limpiar</button>
+        </div>
+      </div>
+    </article>
+    
+    <!-- Control OBS (Abajo) -->
+    <article class="panel panel-obs">
+      <div class="panel-header">
+        <h3>🎛️ Control OBS</h3>
+        <span id="obsApiStatus" style="font-size:11px;color:#6b7280;">Conectando...</span>
+      </div>
+      <div class="panel-body">
+        <iframe src="/web-socket-obs/basic.html?sede=suipacha&sala=sala10" loading="lazy"></iframe>
+      </div>
+    </article>
+    
+  </div>
+
 </main>
 
-<footer class="ogaac-footer">OGAAC · Sala 10 Suipacha</footer>
+<footer class="footer">OGAAC · Consejo de la Magistratura</footer>
 
-<!-- MODELO LIMPIO -->
+<!-- Scripts -->
 <script src="./config.js"></script>
-  <script>
-    window.OGAAC = { sede: "suipacha", sala: "sala10", salaLabel: "Suipacha · Sala 10" };
-  </script>
+<script>window.OGAAC = { sede: "suipacha", sala: "sala10", salaLabel: "Suipacha · Sala 10" };</script>
 <script src="/operador/_shared/panel.js"></script>
+
+<!-- Título Dinámico -->
+<script>
+(function() {
+  var path = window.location.pathname;
+  var match = path.match(/\/operador\/([^\/]+)\/([^\/]+)/i);
+  if (match) {
+    var sede = match[1].charAt(0).toUpperCase() + match[1].slice(1);
+    var sala = match[2].toUpperCase().replace(/^(SALA)(\d+)$/i, "$1 $2");
+    document.getElementById("dynamic-title").textContent = sede + " · " + sala;
+    document.title = "Operador · " + sede + " · " + sala;
+  }
+})();
+</script>
 
 </body>
 </html>

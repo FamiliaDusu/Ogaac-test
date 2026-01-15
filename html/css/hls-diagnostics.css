@@ -1,18 +1,12 @@
-.video-wrapper { border-radius: 16px; overflow: hidden; background:#000; margin-top: 12px; }
-.video-wrapper video { width: 100%; display: block; max-height: 70vh; background:#000; }
-.status-tag { border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
-.status-tag.status-ok { background:#0f9d58; color:#fff; }
-.status-tag.status-error { background:#c0392b; color:#fff; }
-.stream-diagnostics { margin-top: 16px; border:1px solid rgba(255,255,255,.12); border-radius: 14px; padding: 14px; background:rgba(255,255,255,.04); }
-.diag-heading { font-size:14px; font-weight:700; margin-bottom:8px; }
-.diag-row { display:flex; flex-wrap:wrap; gap:8px; font-size:13px; margin-bottom:8px; }
-.diag-row span:last-child { font-family: "SFMono-Regular", Consolas, monospace; }
-.diag-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:10px; }
-.diag-item { padding:8px; border-radius:10px; background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.08); }
-.diag-label { font-size:11px; text-transform:uppercase; opacity:.7; letter-spacing:.08em; }
-.diag-value { font-size:13px; margin-top:4px; font-family: "SFMono-Regular", Consolas, monospace; }
-.diag-message { font-size:12px; line-height:1.4; color:#f5f5f5; margin-bottom:10px; }
-.diag-preview { font-size:11px; line-height:1.4; color:#ccc; background:rgba(0,0,0,.35); border-radius:10px; padding:8px; margin-bottom:10px; }
-.diag-actions { display:flex; flex-wrap:wrap; gap:10px; }
-.diag-actions button { border-radius:10px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#fff; padding:8px 14px; cursor:pointer; }
-.diag-actions button:hover { background:rgba(255,255,255,.18); }
+.diag-console {
+    background: #1e1e1e;
+    color: #00ff00;
+    font-family: monospace;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin-top: 10px;
+    border: 1px solid #333;
+}
+.diag-error { color: #ff5555; }
+.diag-info { color: #8be9fd; }

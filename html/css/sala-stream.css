@@ -210,3 +210,455 @@ body.stream-page .video-wrapper > video {
 .stream-page .card{
   box-shadow: 0 6px 18px rgba(0,0,0,0.10);
 }
+
+/* =======================================================
+   SALA EN VIVO - MEJORAS VISUALES OGAAC v2
+   Unificación con estilo Panel Operador
+   ======================================================= */
+
+/* --- 1. CONTENEDORES (Cards/Paneles) --- */
+.panel-sala {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-top: 4px solid #800020;
+    padding: 1.5rem;
+    height: 100%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.panel-sala:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* --- 2. FORMULARIOS LIMPIOS --- */
+.form-control-ogaac {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.form-control-ogaac:focus {
+    background-color: #fff;
+    border-color: #800020;
+    box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+    outline: none;
+}
+
+.form-control-ogaac::placeholder {
+    color: #9ca3af;
+}
+
+/* Labels mejorados */
+.panel-sala label,
+.form-label-ogaac {
+    font-weight: 600;
+    color: #4a5568;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* --- 3. BOTONERA UNIFORME --- */
+.btn-group-ogaac {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+.btn-ogaac-primary {
+    background: linear-gradient(135deg, #800020 0%, #a01030 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(128, 0, 32, 0.2);
+    transition: all 0.2s ease;
+}
+
+.btn-ogaac-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(128, 0, 32, 0.3);
+}
+
+.btn-ogaac-primary:active {
+    transform: translateY(0);
+}
+
+.btn-ogaac-secondary {
+    background: transparent;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-ogaac-secondary:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.btn-ogaac-danger {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.6rem 1.2rem;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);
+    transition: all 0.2s ease;
+}
+
+.btn-ogaac-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(220, 38, 38, 0.3);
+}
+
+/* --- 4. VIDEO MEJORADO --- */
+.video-panel,
+.panel-sala video,
+.video-container {
+    border-radius: 8px;
+    overflow: hidden;
+    background: #000;
+}
+
+.video-panel video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* --- 5. IFRAME OBS MEJORADO --- */
+.obs-panel iframe,
+.panel-sala iframe {
+    width: 100%;
+    min-height: 400px;
+    border: none;
+    border-radius: 8px;
+    background: #1a1a1a;
+}
+
+.obs-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* --- 6. TÍTULOS DE PANEL --- */
+.panel-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* --- 7. LAYOUT GRID 3 COLUMNAS --- */
+.sala-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: #f3f4f6;
+    min-height: calc(100vh - 120px);
+}
+
+@media (min-width: 1200px) {
+    .sala-layout {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+}
+
+/* --- 8. RESPONSIVE --- */
+@media (max-width: 768px) {
+    .sala-layout {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+    
+    .panel-sala {
+        padding: 1rem;
+    }
+    
+    .btn-group-ogaac {
+        flex-direction: column;
+    }
+    
+    .btn-ogaac-primary,
+    .btn-ogaac-secondary {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* =======================================================
+   SALA EN VIVO - LAYOUT DASHBOARD OPERATIVO
+   Grid Asimétrico: Video 40% | Form 25% | OBS 35%
+   ======================================================= */
+
+/* --- GRID PRINCIPAL ASIMÉTRICO --- */
+.sala-dashboard {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    background: #f3f4f6;
+    min-height: calc(100vh - 80px);
+}
+
+/* Tablet: 2 columnas */
+@media (min-width: 768px) {
+    .sala-dashboard {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .sala-dashboard .panel-video {
+        grid-column: 1 / -1; /* Video ocupa todo arriba */
+    }
+}
+
+/* Desktop: Grid Asimétrico 40-25-35 */
+@media (min-width: 1200px) {
+    .sala-dashboard {
+        grid-template-columns: 40% 25% 35%;
+        gap: 1.5rem;
+        padding: 2rem;
+    }
+    
+    .sala-dashboard .panel-video {
+        grid-column: auto; /* Resetear */
+    }
+}
+
+/* --- TARJETA BASE PREMIUM --- */
+.panel-dashboard {
+    background: #ffffff;
+    border-radius: 12px;
+    border-top: 4px solid #800020;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.panel-dashboard:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.panel-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fafafa;
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1f2937;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.panel-body {
+    padding: 1.25rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- 1. PANEL VIDEO (Estilo Cine) --- */
+.panel-video .panel-body {
+    padding: 0;
+}
+
+.panel-video video {
+    width: 100%;
+    height: 100%;
+    min-height: 300px;
+    object-fit: cover;
+    background: #000;
+    display: block;
+}
+
+@media (min-width: 1200px) {
+    .panel-video video {
+        min-height: 400px;
+    }
+}
+
+/* --- 2. PANEL FORMULARIO (Compacto) --- */
+.panel-form .panel-body {
+    gap: 0.75rem;
+}
+
+.panel-form .form-group {
+    margin-bottom: 0.5rem;
+}
+
+.panel-form label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 0.35rem;
+}
+
+.panel-form input,
+.panel-form select,
+.panel-form textarea {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.panel-form input:focus,
+.panel-form select:focus,
+.panel-form textarea:focus {
+    background: #fff;
+    border-color: #800020;
+    box-shadow: 0 0 0 3px rgba(128, 0, 32, 0.1);
+    outline: none;
+}
+
+/* Botones Grid 2x2 */
+.btn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+}
+
+.btn-grid .btn-full {
+    grid-column: 1 / -1;
+}
+
+.btn-flat {
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+}
+
+.btn-flat-primary {
+    background: #800020;
+    color: #fff;
+}
+
+.btn-flat-primary:hover {
+    background: #5d1622;
+    transform: translateY(-1px);
+}
+
+.btn-flat-secondary {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.btn-flat-secondary:hover {
+    background: #d1d5db;
+}
+
+.btn-flat-danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.btn-flat-danger:hover {
+    background: #fecaca;
+}
+
+/* --- 3. PANEL OBS (Iframe Nativo) --- */
+.panel-obs .panel-body {
+    padding: 0;
+    height: 100%;
+    min-height: 400px;
+}
+
+.panel-obs iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    border: none;
+    display: block;
+}
+
+/* Fix scrollbars internos */
+.panel-obs {
+    overflow: hidden;
+}
+
+@media (min-width: 1200px) {
+    .panel-obs .panel-body,
+    .panel-obs iframe {
+        min-height: 500px;
+    }
+}
+
+/* --- 4. STATUS BADGES --- */
+.status-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-live::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.status-offline {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-offline::before {
+    background: #ef4444;
+    animation: none;
+}

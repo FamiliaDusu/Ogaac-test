@@ -4,194 +4,352 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>OGAAC · Operador · Sede</title>
+  
+  <!-- Preload CSS para rendimiento -->
+  <link rel="preconnect" href="/api">
   <link rel="stylesheet" href="/ogaac.css">
   <link rel="stylesheet" href="/css/ogaac-operador.css">
+  
   <style>
-    /* ========= LOCAL: Layout específico para detalle sede ========= */
-    .sede-detalle-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 16px;
-      padding: 0 16px 24px;
-      max-width: 1400px;
-      margin: 0 auto;
+    /* ========= SEDE DETALLE - ESTILO INSTITUCIONAL ========= */
+    
+    /* Layout principal */
+    .sede-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #f3f4f6;
     }
-    .sede-title-bar {
+    
+    /* Header institucional */
+    .sede-header {
+      background: linear-gradient(135deg, #4A4A4A 0%, #333333 100%);
+      border-bottom: 4px solid #800020;
+      padding: 16px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 12px;
-      padding: 16px;
-      max-width: 1400px;
-      margin: 0 auto;
     }
-    .sede-title-bar h1 {
-      margin: 0;
-      font-size: 22px;
-      font-weight: 600;
+    
+    .sede-header-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .sede-header-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+    
+    .sede-header-subtitle {
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+    }
+    
+    .sede-header-actions {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .sede-title-bar h1 .sede-badge {
+    
+    .sede-header-actions .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
       font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.15s;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .sede-header-actions .btn-back {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .sede-header-actions .btn-back:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .sede-header-actions .btn-logout {
+      background: #800020;
+      color: #fff;
+    }
+    
+    .sede-header-actions .btn-logout:hover {
+      background: #5d1622;
+    }
+    
+    .nav-pill {
       padding: 4px 12px;
       border-radius: 999px;
+      font-size: 11px;
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.9);
+    }
+    
+    /* Breadcrumb */
+    .sede-breadcrumb {
+      padding: 14px 24px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .sede-breadcrumb a {
+      color: #800020;
+      text-decoration: none;
       font-weight: 500;
     }
+    
+    .sede-breadcrumb a:hover {
+      text-decoration: underline;
+    }
+    
+    .sede-breadcrumb .sep {
+      color: #9ca3af;
+    }
+    
+    .sede-breadcrumb .current {
+      color: #1f2937;
+      font-weight: 600;
+    }
+    
+    /* Title bar con stats */
+    .sede-title-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    
+    .sede-title-bar h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 700;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .sede-badge {
+      font-size: 12px;
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      background: rgba(128, 0, 32, 0.1);
+      color: #800020;
+    }
+    
+    .sede-badge.live {
+      background: #dcfce7;
+      color: #166534;
+    }
+    
     .sede-stats-inline {
       display: flex;
-      gap: 16px;
+      gap: 20px;
       flex-wrap: wrap;
     }
+    
     .sede-stats-inline .stat-item {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       font-size: 14px;
-      color: var(--text-muted, #666);
+      color: #4b5563;
+      font-weight: 500;
     }
+    
     .sede-stats-inline .stat-item .dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
     }
-    .sede-stats-inline .stat-item .dot.live   { background: var(--color-ok, #3fbf6b); }
-    .sede-stats-inline .stat-item .dot.recording { background: var(--color-recording, #ff9500); }
-    .sede-stats-inline .stat-item .dot.idle   { background: var(--color-warn, #f5a623); }
-    .sede-stats-inline .stat-item .dot.off    { background: var(--color-danger, #f25f5c); }
-
-    /* Breadcrumb */
-    .breadcrumb-bar {
-      padding: 12px 16px;
+    
+    .sede-stats-inline .dot.live { background: #22c55e; }
+    .sede-stats-inline .dot.recording { background: #f59e0b; }
+    .sede-stats-inline .dot.idle { background: #94a3b8; }
+    .sede-stats-inline .dot.off { background: #ef4444; }
+    
+    /* Grid de salas */
+    .sede-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      padding: 0 24px 32px;
       max-width: 1400px;
       margin: 0 auto;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
+      width: 100%;
     }
-    .breadcrumb-bar a {
-      color: var(--text-link, #0066cc);
-      text-decoration: none;
-    }
-    .breadcrumb-bar a:hover {
-      text-decoration: underline;
-    }
-    .breadcrumb-bar .sep {
-      color: var(--text-muted, #999);
-    }
-
-    /* Card sala */
+    
+    /* Cards de sala - ESTILO PREMIUM */
     .sala-card {
       background: #fff;
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.06);
-      border: 1px solid rgba(0,0,0,.08);
+      border-top: 4px solid #800020;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08);
       overflow: hidden;
-      transition: box-shadow .15s, transform .15s;
+      transition: all 0.2s;
     }
+    
     .sala-card:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,.10);
-      transform: translateY(-2px);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px -5px rgba(0,0,0,0.12);
     }
+    
     .sala-card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 16px;
-      border-bottom: 1px solid rgba(0,0,0,.06);
-      background: rgba(0,0,0,.01);
+      padding: 16px 18px;
+      background: #fafafa;
+      border-bottom: 1px solid #e5e7eb;
     }
+    
     .sala-card-header .sala-name {
-      font-weight: 600;
+      font-weight: 700;
       font-size: 16px;
+      color: #1f2937;
     }
+    
     .sala-card-header .sala-status {
       font-size: 12px;
-      padding: 4px 10px;
+      padding: 4px 12px;
       border-radius: 999px;
-      font-weight: 500;
+      font-weight: 600;
     }
-    .sala-card-header .sala-status.live {
-      background: rgba(63,191,107,.15);
-      color: #1e7a3d;
-    }
-    .sala-card-header .sala-status.recording {
-      background: rgba(255,149,0,.15);
-      color: #b36800;
-    }
-    .sala-card-header .sala-status.idle {
-      background: rgba(245,166,35,.15);
-      color: #9a6c17;
-    }
-    .sala-card-header .sala-status.off {
-      background: rgba(242,95,92,.12);
-      color: #a03533;
-    }
-    .sala-card-header .sala-status.unknown {
-      background: rgba(0,0,0,.08);
-      color: #666;
-    }
+    
+    .sala-status.live { background: #dcfce7; color: #166534; }
+    .sala-status.recording { background: #fef3c7; color: #92400e; }
+    .sala-status.idle { background: #f1f5f9; color: #475569; }
+    .sala-status.off { background: #fee2e2; color: #991b1b; }
+    .sala-status.unknown { background: #f3f4f6; color: #6b7280; }
+    
     .sala-card-body {
-      padding: 14px 16px;
+      padding: 16px 18px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
-    .sala-card-body .sala-info-row {
+    
+    .sala-info-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       font-size: 13px;
-      color: var(--text-muted, #666);
+      color: #6b7280;
     }
-    .sala-card-body .sala-info-row .icon {
-      width: 18px;
+    
+    .sala-info-row .icon {
+      width: 20px;
       text-align: center;
+      font-size: 14px;
     }
+    
     .sala-card-footer {
-      padding: 12px 16px;
-      border-top: 1px solid rgba(0,0,0,.06);
+      padding: 14px 18px;
+      border-top: 1px solid #e5e7eb;
       display: flex;
       gap: 10px;
       justify-content: flex-end;
     }
-    .sala-card-footer .btn-sm {
+    
+    .sala-card-footer .btn-panel {
+      padding: 8px 18px;
+      border-radius: 6px;
       font-size: 13px;
-      padding: 6px 14px;
+      font-weight: 600;
+      text-decoration: none;
+      background: linear-gradient(135deg, #800020 0%, #a01030 100%);
+      color: #fff;
+      transition: all 0.15s;
     }
-
+    
+    .sala-card-footer .btn-panel:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(128,0,32,0.3);
+    }
+    
+    /* Footer */
+    .sede-footer {
+      margin-top: auto;
+      background: #4A4A4A;
+      border-top: 3px solid #800020;
+      padding: 12px 24px;
+      color: rgba(255,255,255,0.7);
+      font-size: 12px;
+      text-align: center;
+    }
+    
     /* Empty state */
     .empty-state {
+      grid-column: 1 / -1;
       text-align: center;
-      padding: 48px 24px;
-      color: var(--text-muted, #666);
+      padding: 60px 24px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px dashed #d1d5db;
     }
-    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
-    .empty-state h3 { margin: 0 0 8px; font-size: 18px; color: var(--text-main, #303030); }
-    .empty-state p { margin: 0; }
+    
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state h3 { margin: 0 0 8px; font-size: 18px; color: #1f2937; }
+    .empty-state p { margin: 0; color: #6b7280; }
+    
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sede-header { padding: 12px 16px; }
+      .sede-title-bar { padding: 16px; }
+      .sede-grid { padding: 0 16px 24px; gap: 16px; }
+      .sede-title-bar h1 { font-size: 20px; }
+    }
   </style>
 </head>
-<body class="page">
+<body class="sede-page">
 
-<header class="ogaac-header">
-  <div class="ogaac-brand">
-    <div class="ogaac-brand-title">OGAAC · Operador</div>
-    <div class="ogaac-brand-subtitle" id="header-subtitle">Cargando sede...</div>
+<header class="sede-header">
+  <div class="sede-header-brand">
+    <div class="sede-header-title">OGAAC · Operador</div>
+    <div class="sede-header-subtitle" id="header-subtitle">Cargando sede...</div>
   </div>
-  <div class="ogaac-header-actions">
-    <a class="btn btn-ghost" href="/operador/sedes.html">← Volver a Sedes</a>
+  <div class="sede-header-actions">
+    <a class="btn btn-back" href="/operador/sedes.html">← Volver a Sedes</a>
     <span class="nav-pill">Modo Operador</span>
-    <button data-action="logout" class="btn btn-ghost" title="Cerrar sesión">🚪 Salir</button>
+    <button data-action="logout" class="btn btn-logout" title="Cerrar sesión">🚪 Salir</button>
   </div>
 </header>
 
-<nav class="breadcrumb-bar">
+<nav class="sede-breadcrumb">
   <a href="/operador/sedes.html">Sedes</a>
   <span class="sep">›</span>
-  <span id="breadcrumb-sede">...</span>
+  <span class="current" id="breadcrumb-sede">...</span>
 </nav>
 
 <section class="sede-title-bar">
@@ -200,29 +358,36 @@
     <span class="sede-badge" id="sede-badge" style="display:none"></span>
   </h1>
   <div class="sede-stats-inline" id="sede-stats">
-    <!-- Populated by JS -->
+    <div class="stat-item"><span class="dot skeleton" style="width:10px;height:10px;border-radius:50%;"></span> Cargando...</div>
   </div>
 </section>
 
-<main class="sede-detalle-grid" id="salas-grid">
-  <!-- Populated by JS -->
+<main class="sede-grid" id="salas-grid">
+  <!-- Skeleton loaders -->
+  <article class="sala-card">
+    <div class="sala-card-header"><span class="skeleton" style="width:100px;height:20px;display:block;border-radius:4px;"></span></div>
+    <div class="sala-card-body"><div class="skeleton" style="width:100%;height:60px;border-radius:4px;"></div></div>
+  </article>
+  <article class="sala-card">
+    <div class="sala-card-header"><span class="skeleton" style="width:100px;height:20px;display:block;border-radius:4px;"></span></div>
+    <div class="sala-card-body"><div class="skeleton" style="width:100%;height:60px;border-radius:4px;"></div></div>
+  </article>
 </main>
 
-<footer class="ogaac-footer">
-  OGAAC · Sistema de Gestión de Audiencias · Uso interno
+<footer class="sede-footer">
+  OGAAC · Sistema de Gestión de Audiencias · Consejo de la Magistratura
 </footer>
 
 <script>
 (function() {
-  'use strict';
+  "use strict";
 
-  // ========= Configuration =========
-  const API_BASE   = '/api/obs';
+  // Config
+  const API_BASE = "/api/obs";
   const POLL_INTERVAL = 5000;
 
-  // ========= Detect sede from URL =========
+  // Detect sede from URL
   function getSedeFromPath() {
-    // Expected paths: /operador/{sede}/ or /operador/{sede}/index.html
     const path = location.pathname;
     const match = path.match(/\/operador\/([a-z]+)\/?/i);
     return match ? match[1].toLowerCase() : null;
@@ -231,249 +396,186 @@
   const SEDE = getSedeFromPath();
 
   if (!SEDE) {
-    document.getElementById('salas-grid').innerHTML = `
-      <div class="empty-state" style="grid-column: 1/-1;">
-        <div class="icon">⚠️</div>
-        <h3>Sede no identificada</h3>
-        <p>No se pudo detectar la sede desde la URL.<br>
-        <a href="/operador/sedes.html">Volver a la vista de sedes</a></p>
-      </div>`;
+    document.getElementById("salas-grid").innerHTML = 
+      "<div class=\"empty-state\"><div class=\"icon\">⚠️</div><h3>Sede no identificada</h3><p><a href=\"/operador/sedes.html\">Volver a sedes</a></p></div>";
     return;
   }
 
-  // ========= DOM refs =========
-  const elSubtitle      = document.getElementById('header-subtitle');
-  const elBreadcrumb    = document.getElementById('breadcrumb-sede');
-  const elSedeName      = document.getElementById('sede-name');
-  const elSedeBadge     = document.getElementById('sede-badge');
-  const elSedeStats     = document.getElementById('sede-stats');
-  const elSalasGrid     = document.getElementById('salas-grid');
+  // DOM refs
+  const elSubtitle = document.getElementById("header-subtitle");
+  const elBreadcrumb = document.getElementById("breadcrumb-sede");
+  const elSedeName = document.getElementById("sede-name");
+  const elSedeBadge = document.getElementById("sede-badge");
+  const elSedeStats = document.getElementById("sede-stats");
+  const elSalasGrid = document.getElementById("salas-grid");
 
-  // ========= State =========
-  let salasConfig = [];   // Array of {sala, sede, ...} for this sede
-  let salasStatus = {};   // Map: salaId -> status object
+  // State
+  let salasConfig = [];
+  let salasStatus = {};
 
-  // ========= Helpers =========
-  function capitalize(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
+  function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function buildSalaId(sede, sala) { return sede + "-" + sala; }
 
-  function buildSalaId(sede, sala) {
-    return `${sede}-${sala}`;
-  }
-
-  // ========= Initial setup =========
+  // Setup UI
   function setupUI() {
     const sedeTitle = capitalize(SEDE);
-    document.title = `OGAAC · Operador · ${sedeTitle}`;
-    elSubtitle.textContent = `Sede ${sedeTitle}`;
+    document.title = "OGAAC · Operador · " + sedeTitle;
+    elSubtitle.textContent = "Sede " + sedeTitle;
     elBreadcrumb.textContent = sedeTitle;
-    elSedeName.textContent = `Sede ${sedeTitle}`;
+    elSedeName.textContent = "Sede " + sedeTitle;
   }
 
-  // ========= Fetch config =========
+  // Fetch config with timeout
   async function fetchConfig() {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    
     try {
-      const resp = await fetch(`${API_BASE}/config`, { credentials: 'include' });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const resp = await fetch(API_BASE + "/config", { 
+        credentials: "include",
+        signal: controller.signal 
+      });
+      clearTimeout(timeout);
+      
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
       const data = await resp.json();
       
-      // Filter only this sede
       salasConfig = (data.salas || []).filter(s => 
         s.sede && s.sede.toLowerCase() === SEDE
       );
 
       if (salasConfig.length === 0) {
-        elSalasGrid.innerHTML = `
-          <div class="empty-state" style="grid-column: 1/-1;">
-            <div class="icon">📭</div>
-            <h3>Sin salas configuradas</h3>
-            <p>No hay salas configuradas para la sede ${capitalize(SEDE)}.</p>
-          </div>`;
+        elSalasGrid.innerHTML = "<div class=\"empty-state\"><div class=\"icon\">📭</div><h3>Sin salas configuradas</h3><p>No hay salas para " + capitalize(SEDE) + "</p></div>";
         return;
       }
 
       renderSalas();
       startPolling();
     } catch (err) {
-      console.error('[Config] Error:', err);
-      elSalasGrid.innerHTML = `
-        <div class="empty-state" style="grid-column: 1/-1;">
-          <div class="icon">❌</div>
-          <h3>Error de conexión</h3>
-          <p>No se pudo cargar la configuración.<br>
-          <button class="btn btn-primary" onclick="location.reload()">Reintentar</button></p>
-        </div>`;
+      clearTimeout(timeout);
+      elSalasGrid.innerHTML = "<div class=\"empty-state\"><div class=\"icon\">❌</div><h3>Error de conexión</h3><p><button class=\"btn btn-panel\" onclick=\"location.reload()\">Reintentar</button></p></div>";
     }
   }
 
-  // ========= Render salas =========
+  // Render salas
   function renderSalas() {
     elSalasGrid.innerHTML = salasConfig.map(cfg => {
       const salaId = buildSalaId(cfg.sede, cfg.sala);
-      const salaLabel = cfg.sala;
-      return `
-        <article class="sala-card" data-sala-id="${salaId}">
-          <div class="sala-card-header">
-            <span class="sala-name">${salaLabel}</span>
-            <span class="sala-status unknown" data-status-badge>Cargando...</span>
-          </div>
-          <div class="sala-card-body">
-            <div class="sala-info-row"><span class="icon">🎥</span> <span data-obs-status>OBS: --</span></div>
-            <div class="sala-info-row"><span class="icon">📡</span> <span data-stream-status>Stream: --</span></div>
-            <div class="sala-info-row"><span class="icon">🎤</span> <span data-rec-status>Grabación: --</span></div>
-          </div>
-          <div class="sala-card-footer">
-            <a class="btn btn-ghost btn-sm" href="/operador/${cfg.sede}/${cfg.sala}/" target="_blank">Abrir Panel</a>
-          </div>
-        </article>`;
-    }).join('');
+      return "<article class=\"sala-card\" data-sala-id=\"" + salaId + "\">" +
+        "<div class=\"sala-card-header\">" +
+          "<span class=\"sala-name\">" + cfg.sala.toUpperCase() + "</span>" +
+          "<span class=\"sala-status unknown\" data-status-badge>Verificando...</span>" +
+        "</div>" +
+        "<div class=\"sala-card-body\">" +
+          "<div class=\"sala-info-row\"><span class=\"icon\">🎥</span> <span data-obs-status>OBS: --</span></div>" +
+          "<div class=\"sala-info-row\"><span class=\"icon\">📡</span> <span data-stream-status>Stream: --</span></div>" +
+          "<div class=\"sala-info-row\"><span class=\"icon\">🎤</span> <span data-rec-status>Grabación: --</span></div>" +
+        "</div>" +
+        "<div class=\"sala-card-footer\">" +
+          "<a class=\"btn-panel\" href=\"/operador/" + cfg.sede + "/" + cfg.sala + "/\" target=\"_blank\">Abrir Panel</a>" +
+        "</div>" +
+      "</article>";
+    }).join("");
   }
 
-  // ========= Polling =========
+  // Polling
   async function pollStatus() {
-    const promises = salasConfig.map(async cfg => {
+    await Promise.all(salasConfig.map(async cfg => {
       const salaId = buildSalaId(cfg.sede, cfg.sala);
-      const url = `${API_BASE}/${cfg.sede}/${cfg.sala}/status`;
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 4000);
       
       try {
-        const resp = await fetch(url, {
-          credentials: 'include',
+        const resp = await fetch(API_BASE + "/" + cfg.sede + "/" + cfg.sala + "/status", {
+          credentials: "include",
           signal: controller.signal
         });
         clearTimeout(timeout);
         
         if (!resp.ok) {
-          const errData = await resp.json().catch(() => ({}));
-          salasStatus[salaId] = {
-            error: true,
-            errorCode: resp.status,
-            errorMsg: errData.code || errData.message || `HTTP ${resp.status}`
-          };
+          salasStatus[salaId] = { error: true, errorMsg: "HTTP " + resp.status };
           return;
         }
         
         const data = await resp.json();
-        // Lógica unificada: computeSalaState
         const ok = data.ok === true;
-        const streaming = ok && data.status?.outputActive === true;
-        const recording = ok && !streaming && data.status?.recordingActive === true;
         salasStatus[salaId] = {
           ok,
-          streaming,
-          recording,
-          raw: data
+          streaming: ok && data.status?.outputActive === true,
+          recording: ok && data.status?.recordingActive === true
         };
       } catch (err) {
         clearTimeout(timeout);
-        const isTimeout = err.name === 'AbortError';
-        salasStatus[salaId] = {
-          error: true,
-          errorCode: isTimeout ? 'TIMEOUT' : 'NETWORK',
-          errorMsg: isTimeout ? 'Timeout' : (err.message || 'Error de red')
-        };
+        salasStatus[salaId] = { error: true, errorMsg: err.name === "AbortError" ? "Timeout" : "Error" };
       }
-    });
-    await Promise.all(promises);
+    }));
     updateUI();
   }
 
   function updateUI() {
-    // Update each card
     salasConfig.forEach(cfg => {
       const salaId = buildSalaId(cfg.sede, cfg.sala);
-      const card = elSalasGrid.querySelector(`[data-sala-id="${salaId}"]`);
+      const card = elSalasGrid.querySelector("[data-sala-id=\"" + salaId + "\"]");
       if (!card) return;
 
       const status = salasStatus[salaId] || {};
-      const badge = card.querySelector('[data-status-badge]');
-      const obsEl = card.querySelector('[data-obs-status]');
-      const streamEl = card.querySelector('[data-stream-status]');
-      const recEl = card.querySelector('[data-rec-status]');
+      const badge = card.querySelector("[data-status-badge]");
+      const obsEl = card.querySelector("[data-obs-status]");
+      const streamEl = card.querySelector("[data-stream-status]");
+      const recEl = card.querySelector("[data-rec-status]");
 
-      // Caso: Error de conexión/auth/timeout
       if (status.error) {
-        const errLabel = status.errorCode === 401 ? 'No autorizado' :
-                         status.errorCode === 403 ? 'Acceso denegado' :
-                         status.errorCode === 'TIMEOUT' ? 'Timeout' :
-                         status.errorCode === 'NETWORK' ? 'Sin red' :
-                         `Error ${status.errorCode || ''}`;
-        badge.textContent = errLabel;
-        badge.className = 'sala-status off';
-        badge.title = status.errorMsg || '';
-        // OBJETIVO 2: Mostrar solo OBS con motivo, ocultar Stream/Grabación
-        obsEl.textContent = `OBS: ${status.errorMsg || 'Error'}`;
-        streamEl.style.display = 'none';
-        recEl.style.display = 'none';
+        badge.textContent = status.errorMsg || "Error";
+        badge.className = "sala-status off";
+        obsEl.textContent = "OBS: " + (status.errorMsg || "Error");
         return;
       }
 
-      // OBJETIVO 2: Restaurar visibilidad si antes estaba oculto
-      streamEl.style.display = '';
-      recEl.style.display = '';
-
-      // Lógica unificada: streaming y recording ya normalizados
-      const isStreaming = status.streaming === true;
-      const isRecording = status.recording === true;
-      const obsOk = status.ok === true;
-
-      // Badge con 4 estados: EN VIVO > GRABANDO > Conectado > Desconectado
-      if (isStreaming) {
-        badge.textContent = '● EN VIVO';
-        badge.className = 'sala-status live';
-      } else if (isRecording) {
-        badge.textContent = '● GRABANDO';
-        badge.className = 'sala-status recording';
-      } else if (obsOk) {
-        badge.textContent = 'Conectado';
-        badge.className = 'sala-status idle';
+      if (status.streaming) {
+        badge.textContent = "● EN VIVO";
+        badge.className = "sala-status live";
+      } else if (status.recording) {
+        badge.textContent = "● GRABANDO";
+        badge.className = "sala-status recording";
+      } else if (status.ok) {
+        badge.textContent = "Conectado";
+        badge.className = "sala-status idle";
       } else {
-        badge.textContent = 'Desconectado';
-        badge.className = 'sala-status off';
+        badge.textContent = "Desconectado";
+        badge.className = "sala-status off";
       }
-      badge.title = '';
 
-      // Details
-      obsEl.textContent = `OBS: ${obsOk ? 'Conectado' : 'Desconectado'}`;
-      streamEl.textContent = `Stream: ${isStreaming ? 'Transmitiendo' : 'Inactivo'}`;
-      recEl.textContent = `Grabación: ${isRecording ? 'Grabando' : 'Inactiva'}`;
+      obsEl.textContent = "OBS: " + (status.ok ? "Conectado" : "Desconectado");
+      streamEl.textContent = "Stream: " + (status.streaming ? "Activo" : "Inactivo");
+      recEl.textContent = "Grabación: " + (status.recording ? "Grabando" : "Inactiva");
     });
 
-    // Update sede stats
     updateSedeStats();
   }
 
   function updateSedeStats() {
     let live = 0, recording = 0, idle = 0, off = 0;
-
     salasConfig.forEach(cfg => {
-      const salaId = buildSalaId(cfg.sede, cfg.sala);
-      const status = salasStatus[salaId] || {};
-      // Lógica unificada: live > recording > idle > off
-      if (status.error) off++;
-      else if (status.streaming) live++;
-      else if (status.recording) recording++;
-      else if (status.ok) idle++;
+      const s = salasStatus[buildSalaId(cfg.sede, cfg.sala)] || {};
+      if (s.error) off++;
+      else if (s.streaming) live++;
+      else if (s.recording) recording++;
+      else if (s.ok) idle++;
       else off++;
     });
 
-    elSedeStats.innerHTML = `
-      <div class="stat-item"><span class="dot live"></span> ${live} en vivo</div>
-      ${recording > 0 ? `<div class="stat-item"><span class="dot recording"></span> ${recording} grabando</div>` : ''}
-      <div class="stat-item"><span class="dot idle"></span> ${idle} en espera</div>
-      <div class="stat-item"><span class="dot off"></span> ${off} sin conexión</div>
-    `;
+    elSedeStats.innerHTML = 
+      "<div class=\"stat-item\"><span class=\"dot live\"></span> " + live + " en vivo</div>" +
+      (recording > 0 ? "<div class=\"stat-item\"><span class=\"dot recording\"></span> " + recording + " grabando</div>" : "") +
+      "<div class=\"stat-item\"><span class=\"dot idle\"></span> " + idle + " espera</div>" +
+      "<div class=\"stat-item\"><span class=\"dot off\"></span> " + off + " offline</div>";
 
-    // Sede badge
     if (live > 0) {
-      elSedeBadge.textContent = `${live} transmitiendo`;
-      elSedeBadge.style.display = '';
-      elSedeBadge.style.background = 'rgba(63,191,107,.15)';
-      elSedeBadge.style.color = '#1e7a3d';
+      elSedeBadge.textContent = live + " transmitiendo";
+      elSedeBadge.className = "sede-badge live";
+      elSedeBadge.style.display = "";
     } else {
-      elSedeBadge.style.display = 'none';
+      elSedeBadge.style.display = "none";
     }
   }
 
@@ -482,10 +584,9 @@
     setInterval(pollStatus, POLL_INTERVAL);
   }
 
-  // ========= Init =========
+  // Init
   setupUI();
   fetchConfig();
-
 })();
 </script>
 
